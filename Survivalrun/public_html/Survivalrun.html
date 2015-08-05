@@ -16,44 +16,120 @@
                     Patrick Kiermasch
         -->
 	<body>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.js"></script>
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+            <!--Three.js-->
+		<script src="Scripts/three.min.js"></script>
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 		<script>
+                    //Variables
+                    var player;
+                    var renderer, scene, camera;
+                    var clock = new THREE.Clock();
+                    var  controls = {
+                        left: false,
+                        up: false,
+                        right: false,
+                        down: false
+                    };
+                    
+                    //Calls
+                    Init();
+                    animate();
                     
                     //Main Start
-			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+                    function Init()
+                    {
+			scene = new THREE.Scene();
+			camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
                         camera.position.z = 5;
-                        
-			var renderer = new THREE.WebGLRenderer();
+                        camera.position.y = 3;
+                        camera.rotation.x = 12;
+
+			renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
                         
                         //Content
                                  
                         //Player
-                        var tex1 = new THREE.ImageUtils.loadTexture( 'Textures/test.jpg' );
-                        tex1.minFilter = THREE.NearestFilter;
-                        var mat1 = new THREE.MeshBasicMaterial( { map: tex1 } );
-                        var geo1 = new THREE.BoxGeometry(1, 2, 1);
-                        var cube1 = new THREE.Mesh(geo1, mat1);
-                        scene.add(cube1);
+                        var playerText = new THREE.ImageUtils.loadTexture( 'Textures/test.jpg' );
+                        playerText.minFilter = THREE.NearestFilter;
+                        var playerMat = new THREE.MeshBasicMaterial( { map: playerText } );
+                        var playerGeo = new THREE.BoxGeometry(1, 2, 1);
+                        player = new THREE.Mesh(playerGeo, playerMat);
+                        player.position.y = 3;
+                        scene.add(player);
 	
-
+                        //World
+                        var mat2 = new THREE.MeshBasicMaterial( { color: 0xff0f00 } );
+                        var geo2 = new THREE.BoxGeometry(100, 1, 100);
+                        var cube2 = new THREE.Mesh(geo2, mat2);
+                        scene.add(cube2);
                         
-			
-                        //Sceneframes
-			var render = function () {
-				requestAnimationFrame( render );
-                                
-                                //Animation
-                             
-				
-
-				renderer.render(scene, camera);
-			};
-
-			render();
+                         }
+                         
+                    function animate() 
+                    {
+                        requestAnimationFrame( animate );
+                        renderer.render( scene, camera );		
+                        KeyboardInput();
+                    }
+                      
+                    function KeyboardInput()
+                    {
+                        $(document).keydown(function (e) {
+                           switch (e.keyCode) {
+                               case 65:
+                                   controls.left = true;
+                                   break;
+                               case 87:
+                                   controls.up = true;
+                                   break;
+                               case 68:
+                                   controls.right = true;
+                                   break;
+                               case 83:
+                                   controls.down = true;
+                                   break;
+                                }
+                         });
+                        $(document).keyup(function (e) {
+                            switch (e.keyCode) {
+                                case 65:
+                                    controls.left = false;
+                                    break;
+                                case 87:
+                                    controls.up = false;
+                                    break;
+                                case 68:
+                                    controls.right = false;
+                                    break;
+                                case 83:
+                                    controls.down = false;
+                                    break;
+                            }
+                         });
+                          PlayerControls();
+                     }
+                    function PlayerControls()
+                    {
+                        var move = 3 * clock.getDelta();
+                         if(controls.left==true)
+                         {
+                               player.translateX( -move );
+                         }
+                         if(controls.right==true)
+                         {
+                               player.translateX( move );
+                         }
+                         if(controls.up==true)
+                         {
+                             //jump
+                         }
+                         if(controls.down==true)
+                         {
+                             //crouch
+                         }
+                    }
 		</script>
 	</body>
        
