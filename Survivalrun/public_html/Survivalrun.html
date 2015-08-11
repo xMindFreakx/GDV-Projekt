@@ -169,13 +169,13 @@
                         //Down
                         for(var i=3;i < 6; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,1);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,1.001);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
 //                                player.position.y=oldy;
                                 rayGround[i-3]=true;
-                                console.log("XXXXX"+i);
+//                                console.log("XXXXX"+i);
                             }
                             else
                             {
