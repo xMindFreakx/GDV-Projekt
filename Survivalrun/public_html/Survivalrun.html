@@ -20,6 +20,27 @@
 		<script src="Scripts/three.js"></script>
 		<script src="Scripts/OrbitControls.js"></script>
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+                <!-- Shaders -->
+	<script type="x-shader/x-vertex" id="vertexshader">
+
+		// switch on high precision floats
+
+		void main()
+		{
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+		}
+
+	</script>
+
+	<script type="x-shader/x-fragment" id="fragmentshader">
+
+
+		void main()
+		{
+			gl_FragColor 	= vec4(1.0,0.0,1.0,1.0);
+		}
+
+	</script>
 		<script>
                     //Variables
                     var player,isGround,jumpReady,jumptime;
@@ -58,6 +79,7 @@
                         
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
+                        renderer.shadowMapEnabled = true;  //TEST
 			document.body.appendChild( renderer.domElement );
                         
                         //Camera
@@ -69,17 +91,33 @@
                         //Orbitcontroller TEST
                         orbitController = new THREE.OrbitControls( camera );
                         orbitController.damping = 0.2;
+                        
                         //Content
                                  
                         //Player
-                        playerGroup= new THREE.Object3D();
-                        var playerText = new THREE.ImageUtils.loadTexture( 'Textures/test.jpg' );
+                        var playerText = new THREE.ImageUtils.loadTexture( 'Textures/Player/playertex.png' );
                         playerText.minFilter = THREE.NearestFilter;
-                        var playerMat = new THREE.MeshBasicMaterial( { map: playerText } );
-                        var playerGeo = new THREE.BoxGeometry(1, 2, 1);
-                        player = new THREE.Mesh(playerGeo, playerMat);
+//                        var playerMat = new THREE.ShaderMaterial({
+//                                vertexShader:   $('#vertexshader').text(),
+//                                fragmentShader: $('#fragmentshader').text()
+//                        }); //MeshLambertMaterial für shadow
+                     var loader = new THREE.JSONLoader();
+                     loader.load( "Models/Player/steve.json", function(geometry){
+                       var material = new THREE.MeshBasicMaterial({ map: playerText});//MeshLambertMaterial für shadow
+                       player = new THREE.Mesh(geometry, material);
+                        player.castShadow=true;
                         player.position.y = 1.5;
-                        scene.add(player);
+                       scene.add(player);
+                     });
+                        //PlayerspotLight
+//                        var spotlight = new THREE.SpotLight(0xffff00);
+//                        spotlight.position.set(0,5,0);
+//                        spotlight.shadowCameraVisible = true;
+//                        spotlight.shadowDarkness = 0.95;
+//                        spotlight.intensity = 2;
+//                        spotlight.castShadow = true;
+//                        scene.add(spotlight);
+
                         //World
                         var mat2 = new THREE.MeshBasicMaterial( { color: 0xff0f00 } );
                         var geo2 = new THREE.BoxGeometry(100, 10, 100);
