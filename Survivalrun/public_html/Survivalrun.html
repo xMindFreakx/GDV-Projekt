@@ -69,7 +69,6 @@
                         right: false,
                         down: false
                         };
-                        player = new THREE.Mesh(); //Error fixed
                         clock = new THREE.Clock();
                         jumptime=0;
                         jumpReady=false;
@@ -106,8 +105,8 @@
                      loader.load( "Models/Player/steve.json", function(geometry){
                        var material = new THREE.MeshBasicMaterial({ map: playerText});//MeshLambertMaterial für shadow
                        player = new THREE.Mesh(geometry, material);
-                       player.castShadow=true;
-                       player.position.y = 1.5;
+                        player.castShadow=true;
+                        player.position.y = 1.5;
                        scene.add(player);
                      });
                         //PlayerspotLight
@@ -164,14 +163,15 @@
                             new THREE.Vector3(player.position.x, player.position.y-1, player.position.z), //right
                             new THREE.Vector3(player.position.x, player.position.y, player.position.z),   //right
                             new THREE.Vector3(player.position.x, player.position.y+1, player.position.z),  //right
-                            new THREE.Vector3(player.position.x-0.27, player.position.y, player.position.z),//up
+                            new THREE.Vector3(player.position.x-0.5, player.position.y, player.position.z),//up
                             new THREE.Vector3(player.position.x, player.position.y, player.position.z),//up
-                            new THREE.Vector3(player.position.x+0.27, player.position.y, player.position.z),//up
+                            new THREE.Vector3(player.position.x+0.5, player.position.y, player.position.z),//up
                           ];
+                          
                         //Right
                         for(var i=0;i < 3; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.27);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.5);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -183,7 +183,7 @@
                         //Left
                         for(var i=0;i < 3; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.27);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.5);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
