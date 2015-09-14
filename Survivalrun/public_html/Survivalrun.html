@@ -154,24 +154,25 @@
                         collisionDetection();
                         //orbitcontrols tests
                         orbitController.update();
-                        
+                         
                     }
                     function collisionDetection()
                     {
                        oldy=player.position.y;
                          ray = [
-                            new THREE.Vector3(player.position.x, player.position.y-1, player.position.z), //right
-                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),   //right
-                            new THREE.Vector3(player.position.x, player.position.y+1, player.position.z),  //right
-                            new THREE.Vector3(player.position.x-0.5, player.position.y, player.position.z),//up
-                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),//up
-                            new THREE.Vector3(player.position.x+0.5, player.position.y, player.position.z),//up
+                            new THREE.Vector3(player.position.x, player.position.y-1, player.position.z), //right left
+                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),   //right left
+                            new THREE.Vector3(player.position.x, player.position.y+1, player.position.z),  //right left
+                            new THREE.Vector3(player.position.x, player.position.y+2, player.position.z),  //right left
+                            new THREE.Vector3(player.position.x-0.5, player.position.y, player.position.z),//up down
+                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),//up down
+                            new THREE.Vector3(player.position.x+0.5, player.position.y, player.position.z),//up down
                           ];
                           
                         //Right
-                        for(var i=0;i < 3; i++)
+                        for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.5);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.3);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -181,9 +182,9 @@
                         }
                         
                         //Left
-                        for(var i=0;i < 3; i++)
+                        for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.5);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.3);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -193,7 +194,7 @@
                         }
                         
                         //Up
-                        for(var i=3;i < 6; i++)
+                        for(var i=4;i < 7; i++)
                         {
                             rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,1,0),0,1);
                             collisions = rayCaster.intersectObjects(colliderObject);
@@ -205,19 +206,19 @@
                         }
                         
                         //Down
-                        for(var i=3;i < 6; i++)
+                        for(var i=4;i < 7; i++)
                         {
                             rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,1.001);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
 //                                player.position.y=oldy;
-                                rayGround[i-3]=true;
+                                rayGround[i-4]=true;
 //                                console.log("XXXXX"+i);
                             }
                             else
                             {
-                                rayGround[i-3]=false;
+                                rayGround[i-4]=false;
                             }
                         }
                         if(rayGround[0] || rayGround[1] || rayGround[2])
