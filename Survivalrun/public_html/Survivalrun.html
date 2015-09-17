@@ -93,35 +93,31 @@
                         
                         //Dom
                        document.body.appendChild( renderer.domElement );
+                       
                         //Content
-                                 
-                        //Player
-                        var playerText = new THREE.ImageUtils.loadTexture( 'Textures/Player/playertex.png' );
-                        playerText.minFilter = THREE.NearestFilter;
-//                        var playerMat = new THREE.ShaderMaterial({
-//                                vertexShader:   $('#vertexshader').text(),
-//                                fragmentShader: $('#fragmentshader').text()
-//                        }); //MeshLambertMaterial für shadow
-                     objLoader.load( "Models/Player/steve.json", function(geometry){
-                       var material = new THREE.MeshLambertMaterial({ map: playerText});//MeshLambertMaterial für shadow
-                       player = new THREE.Mesh(geometry, material);
-                        player.castShadow=true;
-                        player.position.y = 1.5;
-                       scene.add(player);
-                     });
-                     
-                       objLoader.load( "Models/Enemies/abc.json", function( geometry,materials ) {
+                     objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
                            for ( var k in materials ) 
                            {
                                 materials[k].skinning = true;
                            }
-                    var test = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                     test.scale.set( 1, 1, 1 );
-                     test.position.y = 10;
-                     scene.add( test );
-                     animation = new THREE.Animation( test, test.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                     player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                     player.position.y = 1.5;
+                     scene.add( player );
+                     animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                      animation.play();
-                    });
+                    }); 
+//                     objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
+//                           for ( var k in materials ) 
+//                           {
+//                                materials[k].skinning = true;
+//                           }
+//                     var test = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+//                     test.scale.set( 1, 1, 1 );
+//                     test.position.y = 10;
+//                     scene.add( test );
+//                     animation = new THREE.Animation( test, test.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+//                     animation.play();
+//                    }); 
                         //PlayerspotLight
                         var spotlight = new THREE.SpotLight();
                         spotlight.position.set(0,100,0);
@@ -182,13 +178,13 @@
                     {
                        oldy=player.position.y;
                          ray = [
-                            new THREE.Vector3(player.position.x, player.position.y-1, player.position.z), //right left bottom
-                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),   //right left mid
-                            new THREE.Vector3(player.position.x, player.position.y+1, player.position.z),  //right left Upper
-                            new THREE.Vector3(player.position.x, player.position.y+2, player.position.z),  //right left Head
-                            new THREE.Vector3(player.position.x-0.4, player.position.y, player.position.z),//up down
-                            new THREE.Vector3(player.position.x, player.position.y, player.position.z),//up down
-                            new THREE.Vector3(player.position.x+0.4, player.position.y, player.position.z),//up down
+                            new THREE.Vector3(player.position.x, player.position.y+0.15, player.position.z), //right left bottom
+                            new THREE.Vector3(player.position.x, player.position.y+1.30, player.position.z),   //right left mid
+                            new THREE.Vector3(player.position.x, player.position.y+2.30, player.position.z),  //right left Upper
+                            new THREE.Vector3(player.position.x, player.position.y+2.90, player.position.z),  //right left Head
+                            new THREE.Vector3(player.position.x-0.35, player.position.y+0.4, player.position.z),//up down
+                            new THREE.Vector3(player.position.x, player.position.y+0.4, player.position.z),//up down
+                            new THREE.Vector3(player.position.x+0.35, player.position.y+0.4, player.position.z),//up down
                           ];
                           
                         //Right
@@ -206,7 +202,7 @@
                         //Left
                         for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.3);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.4);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -218,7 +214,7 @@
                         //Up
                         for(var i=4;i < 7; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,1,0),0,1);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,1,0),0.3);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -230,7 +226,7 @@
                         //Down
                         for(var i=4;i < 7; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,1.001);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,0.3);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
@@ -292,7 +288,7 @@
                      }
                     function playerControls()
                     {
-                        var move = 3 * clock.getDelta();
+                        var move = 0.07;
                         
                         if(isGround)
                         {
