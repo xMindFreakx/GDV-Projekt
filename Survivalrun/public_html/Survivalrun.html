@@ -43,7 +43,7 @@
 	</script>
 		<script>
                     //Variables
-                    var player,isGround,jumpReady,jumptimestart,jumptimerend,jumptime;
+                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer;
                     var rayCaster;
                     var oldx,oldy;
                     var collisions;
@@ -71,13 +71,12 @@
                         };
                         clock = new THREE.Clock();
                         objLoader = new THREE.JSONLoader();
-                        jumptime=0;
                         jumpReady=false;
                         isGround=false;
-                        firstmovedone=false;
+                        firstJump= true;
                         rayGround=[false,false,false];
 			scene = new THREE.Scene();
-                        
+                        jumpPause=clock.getElapsedTime();
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
                         renderer.shadowMapEnabled = true;  //TEST
@@ -143,7 +142,6 @@
                         colliderObject.push(box2);
                         colliderObject.push(cube2);
                         
-                        animate();
                          };
                     function animate() 
                     {
@@ -276,8 +274,22 @@
                         playerMoveAnimation();
                         if(isGround)
                         {
-                            jumpReady=true;
-                            jumptimerstart =clock.getElapsedTime()
+                            //JumpPause
+                            if(groundTimer)
+                            {
+                                jumpPause = clock.getElapsedTime();
+                                groundTimer=false;
+                            }
+                            if(clock.getElapsedTime()> jumpPause+0.08 && !groundTimer)
+                            {
+                                jumpReady=true;
+                                firstJump=false;
+                                jumpTime =clock.getElapsedTime()
+                            }
+                        }
+                        else
+                        {
+                            groundTimer=true;
                         }
                          if(controls.left==true)
                          {
@@ -291,9 +303,10 @@
                          }
                          if(controls.up==true)
                          {
-                             if(clock.getElapsedTime()<(jumptimerstart+0.5) && jumpReady)
+                             if(clock.getElapsedTime()<(jumpTime+0.5) && jumpReady)
                              {
                                  player.translateY( 0.15 );
+                                 jumpPause = clock.getElapsedTime();
                              }
                          }
                          else
@@ -314,7 +327,7 @@
                         {
                             animation.stop();
                         }
-                    }
+                    };
 		</script>
 	</body>
        
