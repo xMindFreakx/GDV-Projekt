@@ -43,7 +43,7 @@
 	</script>
 		<script>
                     //Variables
-                    var player,isGround,jumpReady,jumptime;
+                    var player,isGround,jumpReady,jumptimestart,jumptimerend,jumptime;
                     var rayCaster;
                     var oldx,oldy;
                     var collisions;
@@ -55,7 +55,6 @@
                     var rayGround;
                     var objLoader;
                     var colliderObject=[];
-                    var localtime;
                     var animation;
                     
                     //init
@@ -75,8 +74,7 @@
                         jumptime=0;
                         jumpReady=false;
                         isGround=false;
-                        animationPlayerMove=false;
-                        animationPlayerJump=false;
+                        firstmovedone=false;
                         rayGround=[false,false,false];
 			scene = new THREE.Scene();
                         
@@ -260,7 +258,7 @@
                                     break;
                                 case 87:
                                     controls.up = false;
-                                    jumptime=0;
+//                                    jumptimestart=clock.getElapsedTime();
                                     break;
                                 case 68:
                                     controls.right = false;
@@ -275,20 +273,11 @@
                     function playerControls()
                     {
                         var move = 0.07;
-                        if(controls.left || controls.right || controls.up || jumpReady)
-                        {
-                            if(!animation.isPlaying)
-                            {
-                                animation.play();
-                            }
-                        }
-                        else
-                        {
-                            animation.stop();
-                        }
+                        playerMoveAnimation();
                         if(isGround)
                         {
                             jumpReady=true;
+                            jumptimerstart =clock.getElapsedTime()
                         }
                          if(controls.left==true)
                          {
@@ -302,9 +291,7 @@
                          }
                          if(controls.up==true)
                          {
-//                             oldy=player.position.y;
-                            jumptime+=10*clock.getDelta();
-                             if(jumptime<=1 && jumpReady)
+                             if(clock.getElapsedTime()<(jumptimerstart+0.5) && jumpReady)
                              {
                                  player.translateY( 0.15 );
                              }
@@ -314,13 +301,19 @@
                              jumpReady=false;
                          }
                     }
-                    function playerMoveanimation()
+                    function playerMoveAnimation()
                     {
-                        if(walking)
+                        if(controls.left || controls.right || controls.up || jumpReady)
                         {
-                            animation.play();
+                            if(!animation.isPlaying)
+                            {
+                                animation.play(animation.currentTime);
+                            }
                         }
-                        
+                        else
+                        {
+                            animation.stop();
+                        }
                     }
 		</script>
 	</body>
