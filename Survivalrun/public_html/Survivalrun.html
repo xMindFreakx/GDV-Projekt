@@ -55,26 +55,30 @@
                     var rayGround;
                     var objLoader;
                     var colliderObject=[];
+                    var localtime;
+                    var animation;
                     
-                    
+                    //init
+                     init();
+                     animate();
                     //Main Start
-                    var init = function () 
+                   function init() 
                     {
                         //Init Variables
                         controls = {
                         left: false,
                         up: false,
                         right: false,
-                        down: false
                         };
                         clock = new THREE.Clock();
                         objLoader = new THREE.JSONLoader();
                         jumptime=0;
                         jumpReady=false;
                         isGround=false;
+                        animationPlayerMove=false;
+                        animationPlayerJump=false;
                         rayGround=[false,false,false];
 			scene = new THREE.Scene();
-                        
                         
 			renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
@@ -95,29 +99,16 @@
                        document.body.appendChild( renderer.domElement );
                        
                         //Content
-                     objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
-                           for ( var k in materials ) 
-                           {
-                                materials[k].skinning = true;
-                           }
-                     player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                     player.position.y = 1.5;
-                     scene.add( player );
-                     animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                     animation.play();
-                    }); 
-//                     objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
-//                           for ( var k in materials ) 
-//                           {
-//                                materials[k].skinning = true;
-//                           }
-//                     var test = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-//                     test.scale.set( 1, 1, 1 );
-//                     test.position.y = 10;
-//                     scene.add( test );
-//                     animation = new THREE.Animation( test, test.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-//                     animation.play();
-//                    }); 
+                        objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
+                              for ( var k in materials ) 
+                              {
+                                   materials[k].skinning = true;
+                              }
+                        player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        player.position.y = 1.5;
+                        scene.add( player );
+                        animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                       }); 
                         //PlayerspotLight
                         var spotlight = new THREE.SpotLight();
                         spotlight.position.set(0,100,0);
@@ -167,13 +158,8 @@
                         delta = clock.getDelta(); // delta time;
                         //orbitcontrols tests
                         orbitController.update();
-                        
-                        //Animations
-                        
-//                        mesh.updateAnimation( delta * 30000); //delta
-                        
-                         
                     }
+                    
                     function collisionDetection()
                     {
                        oldy=player.position.y;
@@ -289,7 +275,17 @@
                     function playerControls()
                     {
                         var move = 0.07;
-                        
+                        if(controls.left || controls.right || controls.up || jumpReady)
+                        {
+                            if(!animation.isPlaying)
+                            {
+                                animation.play();
+                            }
+                        }
+                        else
+                        {
+                            animation.stop();
+                        }
                         if(isGround)
                         {
                             jumpReady=true;
@@ -317,11 +313,15 @@
                          {
                              jumpReady=false;
                          }
-                         if(controls.down==true)
-                         {
-                         }
                     }
-                    window.onload = init;
+                    function playerMoveanimation()
+                    {
+                        if(walking)
+                        {
+                            animation.play();
+                        }
+                        
+                    }
 		</script>
 	</body>
        
