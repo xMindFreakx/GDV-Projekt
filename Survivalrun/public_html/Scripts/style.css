@@ -7,11 +7,19 @@
        margin: 0px;
        overflow: hidden;
     }
+    a {
+        text-decoration: none;
+    }
+    a:link, a:visited {
+        color: white;
+    }
+    a:hover {
+        color: green;
+    }
     #menu{ 
        position: absolute;
        width: 100%;
        height: 100%;
-       margin-top: 2%;
        font-size: 30px;
        font-family: sans-serif;
        color: white;

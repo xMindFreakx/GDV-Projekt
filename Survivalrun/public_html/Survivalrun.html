@@ -17,15 +17,8 @@
                     Patrick Kiermasch
         -->
 	<body>
-            <div id="menu">
-                <center>
-                    <h1>Surivialrun</h1>
-                    <p> Start
-                    <br> Highscore
-                </center>
-            </div>
-                
-            <!--Three.js-->
+            
+                 <!--Three.js-->
 		<script>
                     //Variables
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer;
@@ -132,14 +125,14 @@
                         //box
                         var boxMat = new THREE.MeshBasicMaterial( { color: 0xff5ff0 } );
                         var boxGeo = new THREE.BoxGeometry(1, 2, 1);
-                       var box = new THREE.Mesh(boxGeo, boxMat);
+                        var box = new THREE.Mesh(boxGeo, boxMat);
                         box.position.y = 1;
                         box.position.x = 2;
                         scene.add(box);
                         //box
                         var boxMat1 = new THREE.MeshBasicMaterial( { color: 0xff5ff0 } );
                         var boxGeo1 = new THREE.BoxGeometry(1, 2, 1);
-                       var box2 = new THREE.Mesh(boxGeo1, boxMat1);
+                        var box2 = new THREE.Mesh(boxGeo1, boxMat1);
                         box2.position.y = 1;
                         box2.position.x = -2;
                         scene.add(box2);
@@ -152,7 +145,6 @@
                     }
                     function animate() 
                     {
-                       
                         requestAnimationFrame(animate);
                         renderer.render( scene, camera );
                         if(!menuScene)
@@ -171,7 +163,7 @@
                        oldy=player.position.y;
                          ray = [
                             new THREE.Vector3(player.position.x, player.position.y+0.15, player.position.z), //right left bottom
-                            new THREE.Vector3(player.position.x, player.position.y+1.30, player.position.z),   //right left mid
+                            new THREE.Vector3(player.position.x, player.position.y+1.30, player.position.z), //right left mid
                             new THREE.Vector3(player.position.x, player.position.y+2.30, player.position.z),  //right left Upper
                             new THREE.Vector3(player.position.x, player.position.y+2.90, player.position.z),  //right left Head
                             new THREE.Vector3(player.position.x-0.36, player.position.y+0.4, player.position.z),//up down
@@ -261,7 +253,6 @@
                                     break;
                                 case 87:
                                     controls.up = false;
-//                                    jumptimestart=clock.getElapsedTime();
                                     break;
                                 case 68:
                                     controls.right = false;
