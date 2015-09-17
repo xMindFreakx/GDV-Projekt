@@ -1,11 +1,12 @@
 <html>
 	<head>
+        <title>Survivalrun</title>
+        <meta charset="UTF-8">
             <meta name="author" content="Andreas Maisch Maxi Hartmann Anton Stein Patrick Kiermasch">
-		<title>Survivalrun</title>
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-		</style>
+            <link href="Scripts/style.css" type="text/css" rel="stylesheet">
+                <script src="Scripts/three.js"></script>
+		<script src="Scripts/OrbitControls.js"></script>
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	</head>
         <!--
             GDV Project 2015 - Gruppe NR. 5  - Survivalrun
@@ -16,31 +17,15 @@
                     Patrick Kiermasch
         -->
 	<body>
+            <div id="menu">
+                <center>
+                    <h1>Surivialrun</h1>
+                    <p> Start
+                    <br> Highscore
+                </center>
+            </div>
+                
             <!--Three.js-->
-		<script src="Scripts/three.js"></script>
-		<script src="Scripts/OrbitControls.js"></script>
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-                <!-- Shaders -->
-	<script type="x-shader/x-vertex" id="vertexshader">
-
-		// switch on high precision floats
-
-		void main()
-		{
-			gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-		}
-
-	</script>
-
-	<script type="x-shader/x-fragment" id="fragmentshader">
-
-
-		void main()
-		{
-			gl_FragColor 	= vec4(1.0,0.0,1.0,1.0);
-		}
-
-	</script>
 		<script>
                     //Variables
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer;
@@ -56,12 +41,12 @@
                     var objLoader;
                     var colliderObject=[];
                     var animation;
+                    var menuScene;
                     
                     //init
                      init();
-                     animate();
                     //Main Start
-                   function init() 
+                    function init() 
                     {
                         //Init Variables
                         controls = {
@@ -74,39 +59,61 @@
                         jumpReady=false;
                         isGround=false;
                         firstJump= true;
+                        menuScene=false;
                         rayGround=[false,false,false];
-			scene = new THREE.Scene();
+                        scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
-			renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth, window.innerHeight );
+                        renderer = new THREE.WebGLRenderer();
+                        renderer.setSize( window.innerWidth, window.innerHeight );
                         renderer.shadowMapEnabled = true;  //TEST
-			document.body.appendChild( renderer.domElement );
-                        
+                        document.body.appendChild( renderer.domElement );
+
                         //Camera
                         camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
                         camera.position.z = 7;
                         camera.position.y = 4;
                         camera.rotation.x = 12;
-                        
+
                         //Orbitcontroller TEST
                         orbitController = new THREE.OrbitControls( camera );
                         orbitController.damping = 0.2;
-                        
+
                         //Dom
-                       document.body.appendChild( renderer.domElement );
-                       
-                        //Content
+                        document.body.appendChild( renderer.domElement );
+                        
+                        //Menuscreen
+//                        createMenu();
+                        //World 1
+                        createPlayer(0,1.5);
+                        createLevel1();
+                    }
+                    function createPlayer(x,y)
+                    {
                         objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
                               for ( var k in materials ) 
                               {
                                    materials[k].skinning = true;
                               }
                         player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        player.position.y = 1.5;
+                        player.position.y = y;
+                        player.position.x = x;
                         scene.add( player );
                         animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                        }); 
-                        //PlayerspotLight
+                    }
+                    function createMenu()
+                    {
+                        //World
+                        var mat2 = new THREE.MeshBasicMaterial( { color: 0xff0f00 } );
+                        var geo2 = new THREE.BoxGeometry(100, 10, 100);
+                        cube2 = new THREE.Mesh(geo2, mat2);
+                        cube2.position.y= -5;
+                        scene.add(cube2);
+                        animate();
+                    }
+                    function createLevel1()
+                    {
+                        //Spotlight
                         var spotlight = new THREE.SpotLight();
                         spotlight.position.set(0,100,0);
                         spotlight.shadowCameraVisible = true;
@@ -121,7 +128,7 @@
                         var cube2 = new THREE.Mesh(geo2, mat2);
                         cube2.position.y= -5;
                         scene.add(cube2);
-                        
+
                         //box
                         var boxMat = new THREE.MeshBasicMaterial( { color: 0xff5ff0 } );
                         var boxGeo = new THREE.BoxGeometry(1, 2, 1);
@@ -136,24 +143,27 @@
                         box2.position.y = 1;
                         box2.position.x = -2;
                         scene.add(box2);
-                        
+
                         //colliderArray
                         colliderObject.push(box);
                         colliderObject.push(box2);
                         colliderObject.push(cube2);
-                        
-                         };
+                        animate();
+                    }
                     function animate() 
                     {
                        
                         requestAnimationFrame(animate);
-                        THREE.AnimationHandler.update( clock.getDelta() );
                         renderer.render( scene, camera );
-                        keyboardInput();
-                        collisionDetection();
-                        delta = clock.getDelta(); // delta time;
-                        //orbitcontrols tests
-                        orbitController.update();
+                        if(!menuScene)
+                        {
+                            THREE.AnimationHandler.update( clock.getDelta() );
+                            keyboardInput();
+                            collisionDetection();
+                            delta = clock.getDelta(); // delta time;
+                            //orbitcontrols tests
+                            orbitController.update(); 
+                        }
                     }
                     
                     function collisionDetection()
@@ -164,32 +174,30 @@
                             new THREE.Vector3(player.position.x, player.position.y+1.30, player.position.z),   //right left mid
                             new THREE.Vector3(player.position.x, player.position.y+2.30, player.position.z),  //right left Upper
                             new THREE.Vector3(player.position.x, player.position.y+2.90, player.position.z),  //right left Head
-                            new THREE.Vector3(player.position.x-0.35, player.position.y+0.4, player.position.z),//up down
+                            new THREE.Vector3(player.position.x-0.36, player.position.y+0.4, player.position.z),//up down
                             new THREE.Vector3(player.position.x, player.position.y+0.4, player.position.z),//up down
-                            new THREE.Vector3(player.position.x+0.35, player.position.y+0.4, player.position.z),//up down
+                            new THREE.Vector3(player.position.x+0.36, player.position.y+0.4, player.position.z),//up down
                           ];
                           
                         //Right
                         for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.3);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.35);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
                                 player.position.x=oldx;
-//                                console.log("XXXXX"+i);
                             }
                         }
                         
                         //Left
                         for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.4);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.35);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
                                 player.position.x=oldx;
-//                                console.log("XXXXX"+i);
                             }
                         }
                         
@@ -201,7 +209,6 @@
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
                                 player.position.y=oldy;
-//                                console.log("XXXXX"+i);
                             }
                         }
                         
@@ -212,9 +219,7 @@
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )//&& collisions[0].distance <= distancewd
                             {
-//                                player.position.y=oldy;
                                 rayGround[i-4]=true;
-//                                console.log("XXXXX"+i);
                             }
                             else
                             {
@@ -327,7 +332,7 @@
                         {
                             animation.stop();
                         }
-                    };
+                    }
 		</script>
 	</body>
        
