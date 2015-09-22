@@ -47,7 +47,7 @@
                          });
                     
                     //Variables
-                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer;
+                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed;
                     var rayCaster;
                     var oldx,oldy;
                     var collisions;
@@ -84,25 +84,28 @@
                         objLoader = new THREE.JSONLoader();
                         jumpReady=false;
                         isGround=false;
-                        firstJump= true;
                         menuScene=false;
                         rayGround=[false,false,false];
                         highscoreValue=0;
                         
+                        //Playersettings
+                        moveSpeed=0.45;
+                        jumpSpeed=1;
+                        fallSpeed=0.35;
+                        
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
-//                        renderer = new THREE.WebGLRenderer({ antialias: true});
-                        renderer = new THREE.WebGLRenderer();
+                        renderer = new THREE.WebGLRenderer({ antialias: true});
                         renderer.setSize( window.innerWidth, window.innerHeight );
                         renderer.shadowMapEnabled = true;  //TEST
-//                        renderer.shadowMapType = THREE.PCFSoftShadowMap;
+                        renderer.shadowMapType = THREE.PCFSoftShadowMap;
                         
                         document.body.appendChild( renderer.domElement );
 
                         //Camera
                         camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-                        camera.position.z = 9;
-                        camera.position.y = 4;
+                        camera.position.z = 60;
+                        camera.position.y = 40;
                         camera.rotation.x = 12;
 
                         //Orbitcontroller TEST
@@ -115,7 +118,7 @@
 //                        createMenu();
 //                        
                         //World 1
-                        createPlayer(0,1.5);
+                        createPlayer(0,20.5);
 //                        createMenu();
                        createWorld1();
                        animate();
@@ -130,6 +133,7 @@
                         player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
                         player.position.y = y;
                         player.position.x = x;
+                        player.scale.set(5,5,5);
                         player.castShadow =true;
                         player.receiveShadow =true;
                         scene.add( player );
@@ -151,11 +155,13 @@
                     {
                         //Spotlight
                         var spotlight = new THREE.SpotLight();
-                        spotlight.position.set(-60,150,-30);
+                        spotlight.position.set(-60,300,-30);
                         spotlight.shadowCameraVisible = true;
                         spotlight.shadowDarkness = 1.95;
                         spotlight.intensity = 2;
-//                        spotlight.castShadow = true;
+                        spotlight.castShadow = true;
+                        spotlight.shadowMapHeight = 4096; // default is 512
+                        spotlight.shadowMapWidth = 4096; // default is 512
                         scene.add(spotlight);
                         
                         //world 1
@@ -168,7 +174,7 @@
                         world1.castShadow=true;
                         world1.receiveShadow=true;
                         world1.position.y = -1;
-//                        world1.scale.set(10,10,10);
+                        world1.scale.set(5,5,5);
                         scene.add(world1);
                         colliderObject.push(world1);
                         });
@@ -181,7 +187,8 @@
                               }
                         door1 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
                         door1.position.y = 1;
-                        door1.position.x = 45; 
+                        door1.position.x = 225; 
+                        door1.scale.set(5,5,5);
                         scene.add( door1 );
                         animationdoor1 = new THREE.Animation( door1, door1.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                        }); 
@@ -194,7 +201,8 @@
                               }
                         door2 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
                         door2.position.y = 1;
-                        door2.position.x = 63; 
+                        door2.position.x = 315; 
+                        door2.scale.set(5,5,5);
                         scene.add( door2 );
                         animationdoor2 = new THREE.Animation( door2, door2.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                        }); 
@@ -212,11 +220,8 @@
                                 }));
                         var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
                         skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+                        skyBox.scale.set(5,5,5);
                         scene.add( skyBox );
-                        
-                        //collision
-                        
-                     
                     }
                     function addTorch()
                     {
@@ -256,8 +261,8 @@
                             world1Events()
                             delta = clock.getDelta(); // delta time;
                             //orbitcontrols tests
-//                            orbitController.update(); 
-                            camerafollower();
+                            orbitController.update(); 
+//                            camerafollower();
                             updateHighscore();
                             timer();
                         }
@@ -274,20 +279,18 @@
                     {
                        oldy=player.position.y;
                          ray = [
-                            new THREE.Vector3(player.position.x, player.position.y+0.15, player.position.z), //right left bottom
-                            new THREE.Vector3(player.position.x, player.position.y+1.30, player.position.z), //right left mid
-                            new THREE.Vector3(player.position.x, player.position.y+2.30, player.position.z),  //right left Upper
-                            new THREE.Vector3(player.position.x, player.position.y+2.90, player.position.z),  //right left Head
-                            new THREE.Vector3(player.position.x-0.36, player.position.y+0.4, player.position.z),//up down
-                            new THREE.Vector3(player.position.x, player.position.y+0.4, player.position.z),//up down
-                            new THREE.Vector3(player.position.x+0.36, player.position.y+0.4, player.position.z),//up down
+                            new THREE.Vector3(player.position.x, player.position.y+1, player.position.z), //right left bottom
+                            new THREE.Vector3(player.position.x, player.position.y+6.50, player.position.z), //right left mid
+                            new THREE.Vector3(player.position.x, player.position.y+11.50, player.position.z),  //right left Upper
+                            new THREE.Vector3(player.position.x, player.position.y+14.50, player.position.z),  //right left Head
+                            new THREE.Vector3(player.position.x-1.8, player.position.y+2, player.position.z),//up down
+                            new THREE.Vector3(player.position.x, player.position.y+2, player.position.z),//up down
+                            new THREE.Vector3(player.position.x+1.8, player.position.y+2, player.position.z),//up down
                           ];
-                          
-                          
                         //Right
                         for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,0.35);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,1.75);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )
                             {
@@ -298,7 +301,7 @@
                         //Left
                         for(var i=0;i < 4; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,0.35);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,1.75);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )
                             {
@@ -309,7 +312,7 @@
                         //Up
                         for(var i=4;i < 7; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,1,0),0.3);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,1,0),1.5);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )
                             {
@@ -320,7 +323,7 @@
                         //Down
                         for(var i=4;i < 7; i++)
                         {
-                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,0.3);
+                            rayCaster = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,2);
                             collisions = rayCaster.intersectObjects(colliderObject);
                             if(collisions.length > 0 )
                             {
@@ -340,7 +343,7 @@
                             if(!escMenu)
                             {
                                 isGround=false;
-                                player.translateY( -0.05 );
+                                player.translateY( -fallSpeed );
                             }
                         }
                     }
@@ -388,7 +391,6 @@
                      }
                     function playerControls()
                     {
-                        var move = 0.07;
                         playerMoveAnimation();
                         if(isGround)
                         {
@@ -401,7 +403,6 @@
                             if(clock.getElapsedTime()> jumpPause+0.08 && !groundTimer)
                             {
                                 jumpReady=true;
-                                firstJump=false;
                                 jumpTime =clock.getElapsedTime()
                             }
                         }
@@ -412,19 +413,19 @@
                          if(controls.left==true)
                          {
                              oldx=player.position.x;
-                               player.translateX( -move );
+                               player.translateX( -moveSpeed );
                          }
                          if(controls.right==true)
                          {
                              oldx=player.position.x;
-                               player.translateX( move );
+                               player.translateX( moveSpeed );
                          }
                          if(controls.up==true)
                          {
                              if(clock.getElapsedTime()<(jumpTime+0.5) && jumpReady)
                              {
-                                 player.translateY( 0.15 );
-                                 jumpPause = clock.getElapsedTime();
+                                 player.translateY( jumpSpeed );
+                                 jumpPause = clock.getElapsedTime()*clock.getDelta()*100;
                              }
                          }
                          else
@@ -472,29 +473,6 @@
                             second="0"+second;
                         }
                         document.getElementById("timeviewtext").innerHTML=minute+":"+second;
-                        
-//                        var minute=time/60;
-//                        var second=time%60;
-
-//                        String min,sec;
-//                        if(minute<10)
-//                        {
-//                                min="0"+minute;
-//                        }
-//                        else
-//                        {
-//                                min=""+minute;
-//                        }
-//                        if(second<10)
-//                        {
-//                                sec="0"+second;
-//                        }
-//                        else
-//                        {
-//                                sec=""+second;
-//                        }
-////						timeCounterText.setText(min+":"+sec);
-//                        Log.v("abbc", "#"+min+":"+sec);
                     }
 		</script>
 	</body>
