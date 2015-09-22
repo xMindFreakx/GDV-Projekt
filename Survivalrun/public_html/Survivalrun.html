@@ -89,7 +89,8 @@
                         highscoreValue=0;
                         
                         //Playersettings
-                        moveSpeed=0.45;
+                        moveSpeed=0.6;
+//                        moveSpeed=3.45;
                         jumpSpeed=1;
                         fallSpeed=0.35;
                         
@@ -153,17 +154,23 @@
                     }
                     function createWorld1()
                     {
-                        //Spotlight
-                        var spotlight = new THREE.SpotLight();
-                        spotlight.position.set(-60,300,-30);
-                        spotlight.shadowCameraVisible = true;
-                        spotlight.shadowDarkness = 1.95;
-                        spotlight.intensity = 2;
-                        spotlight.castShadow = true;
-                        spotlight.shadowMapHeight = 4096; // default is 512
-                        spotlight.shadowMapWidth = 4096; // default is 512
-                        scene.add(spotlight);
+                        //sunlight
+                        var sunLight = new THREE.DirectionalLight( 0xffffff, 1);
+                        sunLight.position.set(100,200,+100);
+//                        sunLight.shadowCameraVisible = true;
+                        sunLight.shadowDarkness = 1.95;
+                        sunLight.intensity = 0.1;
+                        sunLight.castShadow = true;
+                        sunLight.shadowMapHeight = 2048; // default is 512
+                        sunLight.shadowMapWidth = 2048; // default is 512
+                        scene.add(sunLight)
                         
+                        //world-light
+//                        var ambientLight = new THREE.AmbientLight( 0x404040,2 ); // soft white light
+//                        scene.add( ambientLight );
+                        var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+                        scene.add( hemiLight );
+
                         //world 1
                         var world1;
                         var worldTexture = new THREE.ImageUtils.loadTexture( 'Models/World/world1.png' );
@@ -178,40 +185,40 @@
                         scene.add(world1);
                         colliderObject.push(world1);
                         });
-                        //doors
-                        var door1;
-                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        door1 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        door1.position.y = 1;
-                        door1.position.x = 225; 
-                        door1.scale.set(5,5,5);
-                        scene.add( door1 );
-                        animationdoor1 = new THREE.Animation( door1, door1.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                       }); 
-                       
-                        var door2;
-                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        door2 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        door2.position.y = 1;
-                        door2.position.x = 315; 
-                        door2.scale.set(5,5,5);
-                        scene.add( door2 );
-                        animationdoor2 = new THREE.Animation( door2, door2.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                       }); 
+//                        //doors
+//                        var door1;
+//                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
+//                              for ( var k in materials ) 
+//                              {
+//                                   materials[k].skinning = true;
+//                              }
+//                        door1 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+//                        door1.position.y = 7;
+//                        door1.position.x = 225; 
+//                        door1.scale.set(5,5,5);
+//                        scene.add( door1 );
+//                        animationdoor1 = new THREE.Animation( door1, door1.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+//                       }); 
+//                       
+//                        var door2;
+//                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
+//                              for ( var k in materials ) 
+//                              {
+//                                   materials[k].skinning = true;
+//                              }
+//                        door2 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+//                        door2.position.y = 7;
+//                        door2.position.x = 315; 
+//                        door2.scale.set(5,5,5);
+//                        scene.add( door2 );
+//                        animationdoor2 = new THREE.Animation( door2, door2.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+//                       }); 
                        
                         //skybox
                         var skyPath = "Models/World/Skybox/sky";
                         var skyDir  = ["left", "right", "up", "down", "back", "front"];
                         var skyType = ".png";
-                        var skyGeometry = new THREE.BoxGeometry( 80, 80, 80 );	
+                        var skyGeometry = new THREE.BoxGeometry( 150, 150, 150 );	
                         var skyMat = [];
                         for (var i = 0; i < 6; i++)
                                 skyMat.push( new THREE.MeshBasicMaterial({
@@ -223,46 +230,43 @@
                         skyBox.scale.set(5,5,5);
                         scene.add( skyBox );
                     }
-                    function addTorch()
-                    {
-                    }
-                    function world1Events()
-                    {
-                        //door1
-                        if(player.position.x < 3)
-                        {
-                            animationdoor1.play();
-                            door1clock = clock.getElapsedTime()+1;
-                        }
-                        if(clock.getElapsedTime() > door1clock)
-                        {
-                            animationdoor1.stop();
-                        }
-                        //door2
-                        if(player.position.x < 61)
-                        {
-                            animationdoor2.play();
-                            door2clock = clock.getElapsedTime()+1;
-                        }
-                        if(clock.getElapsedTime() > door2clock)
-                        {
-                            animationdoor2.stop();
-                        }
-                    }
+//                    function world1Events()
+//                    {
+//                        //door1
+//                        if(player.position.x < 3)
+//                        {
+//                            animationdoor1.play();
+//                            door1clock = clock.getElapsedTime()+1;
+//                        }
+//                        if(clock.getElapsedTime() > door1clock)
+//                        {
+//                            animationdoor1.stop();
+//                        }
+//                        //door2
+//                        if(player.position.x < 61)
+//                        {
+//                            animationdoor2.play();
+//                            door2clock = clock.getElapsedTime()+1;
+//                        }
+//                        if(clock.getElapsedTime() > door2clock)
+//                        {
+//                            animationdoor2.stop();
+//                        }
+//                    }
                     function animate() 
                     {
                         requestAnimationFrame(animate);
                         renderer.render( scene, camera );
                         if(!menuScene)
                         {
-                            THREE.AnimationHandler.update( clock.getDelta()*10 );
+                            THREE.AnimationHandler.update( clock.getDelta()*20 );
                             keyboardInput();
                             collisionDetection();
-                            world1Events()
+//                            world1Events()
                             delta = clock.getDelta(); // delta time;
                             //orbitcontrols tests
-                            orbitController.update(); 
-//                            camerafollower();
+//                            orbitController.update(); 
+                            camerafollower();
                             updateHighscore();
                             timer();
                         }
@@ -270,8 +274,8 @@
                     function camerafollower()
                     {
                         //Camera 
-                        camera.position.x = player.position.x+1;
-                        camera.position.y = player.position.y+5;
+                        camera.position.x = player.position.x+5;
+                        camera.position.y = player.position.y+25;
                         //skybox
                         skyBox.position.x = player.position.x;
                     }
