@@ -48,6 +48,7 @@
                     
                     //Variables
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed;
+                    var sawSpeed;
                     var rayCaster;
                     var oldx,oldy;
                     var collisions;
@@ -59,6 +60,7 @@
                     var rayGround;
                     var objLoader;
                     var colliderObject=[];
+                    var sawcollider=[];
                     var animation;
                     var menuScene;
                     var skyBox;
@@ -66,6 +68,7 @@
                     var animationdoor2,door2clock;
                     var escMenu;
                     var highscoreValue;
+                    var saw;
                     
                     
                     //init
@@ -90,7 +93,7 @@
                         
                         //Playersettings
                         moveSpeed=0.6;
-//                        moveSpeed=3.45;
+                        sawSpeed=0.4;
                         jumpSpeed=1;
                         fallSpeed=0.35;
                         
@@ -185,6 +188,20 @@
                         scene.add(world1);
                         colliderObject.push(world1);
                         });
+                        //Saw
+                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/World/Misc/saw.png' );
+                        worldTexture.minFilter = THREE.NearestFilter;
+                        objLoader.load( "Models/World/Misc/saw.json", function(geometry){
+                        var materialworld = new THREE.MeshLambertMaterial({ map: sawTexture});
+                        saw = new THREE.Mesh(geometry, materialworld);
+                        saw.castShadow=true;
+                        saw.receiveShadow=true;
+                        saw.position.y = 10;
+                        saw.position.x = -50;
+                        saw.scale.set(5,5,5);
+                        scene.add(saw);
+                        sawcolliderdw.push(world1);
+                        });
 //                        //doors
 //                        var door1;
 //                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
@@ -230,8 +247,26 @@
                         skyBox.scale.set(5,5,5);
                         scene.add( skyBox );
                     }
-//                    function world1Events()
-//                    {
+                    function animate() 
+                    {
+                        requestAnimationFrame(animate);
+                        renderer.render( scene, camera );
+                        if(!menuScene)
+                        {
+                            THREE.AnimationHandler.update( clock.getDelta()*20 );
+                            keyboardInput();
+                            collisionDetection();
+                            world1Events()
+                            delta = clock.getDelta(); // delta time;
+                            //orbitcontrols tests
+//                            orbitController.update(); 
+                            camerafollower();
+                            updateHighscore();
+                            timer();
+                        }
+                    }
+                    function world1Events()
+                    {
 //                        //door1
 //                        if(player.position.x < 3)
 //                        {
@@ -252,23 +287,9 @@
 //                        {
 //                            animationdoor2.stop();
 //                        }
-//                    }
-                    function animate() 
-                    {
-                        requestAnimationFrame(animate);
-                        renderer.render( scene, camera );
-                        if(!menuScene)
+                        if(!escMenu)
                         {
-                            THREE.AnimationHandler.update( clock.getDelta()*20 );
-                            keyboardInput();
-                            collisionDetection();
-//                            world1Events()
-                            delta = clock.getDelta(); // delta time;
-                            //orbitcontrols tests
-//                            orbitController.update(); 
-                            camerafollower();
-                            updateHighscore();
-                            timer();
+                            saw.translateX( sawSpeed );
                         }
                     }
                     function camerafollower()
@@ -416,13 +437,13 @@
                         }
                          if(controls.left==true)
                          {
-                             oldx=player.position.x;
-                               player.translateX( -moveSpeed );
+                            oldx=player.position.x;
+                            player.translateX( -moveSpeed );
                          }
                          if(controls.right==true)
                          {
-                             oldx=player.position.x;
-                               player.translateX( moveSpeed );
+                            oldx=player.position.x;
+                            player.translateX( moveSpeed );
                          }
                          if(controls.up==true)
                          {
@@ -464,6 +485,7 @@
                         var parseError =  parseInt(clock.getElapsedTime());
                         minute = parseInt(parseError/60);
                         second = parseInt(clock.getElapsedTime())%60;
+                        addHighscoreValue(parseInt(clock.getDelta()*clock.getElapsedTime()*3000));
                         if(minute<10)
                         {
                            minute ="0"+minute;
