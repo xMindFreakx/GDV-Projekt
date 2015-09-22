@@ -18,8 +18,34 @@
         -->
 	<body>
             
+            
+            <div id="highscoreview">
+                <a id="highscoretext">Highscore</a>
+            </div>
+            <div id="timeview">
+                <a id="timeviewtext">00:00</a>
+            </div>
+            <div id="pause">
+                <a id="pausetext"></a>
+            </div>
                  <!--Three.js-->
 		<script>
+                    //ESC
+                     $(document).keyup(function (e) {
+                            if(e.which == 27) {
+                                 if(!escMenu)
+                                 {
+                                     escMenu=true;
+                                     document.getElementById("pausetext").innerHTML="~ Pause ~";
+                                 }
+                                 else
+                                 {
+                                     escMenu=false;
+                                     document.getElementById("pausetext").innerHTML="";
+                                 }
+                             }
+                         });
+                    
                     //Variables
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer;
                     var rayCaster;
@@ -38,6 +64,8 @@
                     var skyBox;
                     var animationdoor1,door1clock;
                     var animationdoor2,door2clock;
+                    var escMenu;
+                    var highscoreValue;
                     
                     
                     //init
@@ -52,17 +80,23 @@
                         right: false,
                         };
                         clock = new THREE.Clock();
+                        loadManager = new THREE.LoadingManager();
                         objLoader = new THREE.JSONLoader();
                         jumpReady=false;
                         isGround=false;
                         firstJump= true;
                         menuScene=false;
                         rayGround=[false,false,false];
+                        highscoreValue=0;
+                        
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
+//                        renderer = new THREE.WebGLRenderer({ antialias: true});
                         renderer = new THREE.WebGLRenderer();
                         renderer.setSize( window.innerWidth, window.innerHeight );
                         renderer.shadowMapEnabled = true;  //TEST
+//                        renderer.shadowMapType = THREE.PCFSoftShadowMap;
+                        
                         document.body.appendChild( renderer.domElement );
 
                         //Camera
@@ -77,13 +111,12 @@
 
                         //Dom
                         document.body.appendChild( renderer.domElement );
-                        
                         //Menuscreen
 //                        createMenu();
 //                        
                         //World 1
                         createPlayer(0,1.5);
-//                        createLevel1();
+//                        createMenu();
                        createWorld1();
                        animate();
                     }
@@ -97,6 +130,8 @@
                         player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
                         player.position.y = y;
                         player.position.x = x;
+                        player.castShadow =true;
+                        player.receiveShadow =true;
                         scene.add( player );
                         animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         }); 
@@ -116,11 +151,11 @@
                     {
                         //Spotlight
                         var spotlight = new THREE.SpotLight();
-                        spotlight.position.set(0,100,0);
+                        spotlight.position.set(-60,150,-30);
                         spotlight.shadowCameraVisible = true;
-                        spotlight.shadowDarkness = 0.95;
+                        spotlight.shadowDarkness = 1.95;
                         spotlight.intensity = 2;
-                        spotlight.castShadow = true;
+//                        spotlight.castShadow = true;
                         scene.add(spotlight);
                         
                         //world 1
@@ -131,8 +166,12 @@
                         var materialworld = new THREE.MeshLambertMaterial({ map: worldTexture});
                         world1 = new THREE.Mesh(geometry, materialworld);
                         world1.castShadow=true;
+                        world1.receiveShadow=true;
                         world1.position.y = -1;
+//                        world1.scale.set(10,10,10);
                         scene.add(world1);
+                        colliderObject.push(world1);
+                        });
                         //doors
                         var door1;
                         objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
@@ -176,8 +215,8 @@
                         scene.add( skyBox );
                         
                         //collision
-                        colliderObject.push(world1);
-                     });
+                        
+                     
                     }
                     function addTorch()
                     {
@@ -219,6 +258,8 @@
                             //orbitcontrols tests
 //                            orbitController.update(); 
                             camerafollower();
+                            updateHighscore();
+                            timer();
                         }
                     }
                     function camerafollower()
@@ -229,7 +270,6 @@
                         //skybox
                         skyBox.position.x = player.position.x;
                     }
-                    
                     function collisionDetection()
                     {
                        oldy=player.position.y;
@@ -297,45 +337,54 @@
                         }
                         else
                         {
-                            isGround=false;
-                            player.translateY( -0.05 );
+                            if(!escMenu)
+                            {
+                                isGround=false;
+                                player.translateY( -0.05 );
+                            }
                         }
                     }
                     function keyboardInput()
                     {
                         $(document).keydown(function (e) {
-                           switch (e.keyCode) {
-                               case 65:
-                                   controls.left = true;
-                                   break;
-                               case 87:
-                                   controls.up = true;
-                                   break;
-                               case 68:
-                                   controls.right = true;
-                                   break;
-                               case 83:
-                                   controls.down = true;
-                                   break;
+                            if(!escMenu)
+                            {
+                                switch (e.keyCode) {
+                                    case 65:
+                                        controls.left = true;
+                                        break;
+                                    case 87:
+                                        controls.up = true;
+                                        break;
+                                    case 68:
+                                        controls.right = true;
+                                        break;
+                                    case 83:
+                                        controls.down = true;
+                                        break;
                                 }
-                         });
-                        $(document).keyup(function (e) {
-                            switch (e.keyCode) {
-                                case 65:
-                                    controls.left = false;
-                                    break;
-                                case 87:
-                                    controls.up = false;
-                                    break;
-                                case 68:
-                                    controls.right = false;
-                                    break;
-                                case 83:
-                                    controls.down = false;
-                                    break;
                             }
                          });
-                          playerControls();
+                        $(document).keyup(function (e) {
+                            if(!escMenu)
+                            {
+                                switch (e.keyCode) {
+                                    case 65:
+                                        controls.left = false;
+                                        break;
+                                    case 87:
+                                        controls.up = false;
+                                        break;
+                                    case 68:
+                                        controls.right = false;
+                                        break;
+                                    case 83:
+                                        controls.down = false;
+                                        break;
+                                }
+                            }
+                         });
+                        playerControls();
                      }
                     function playerControls()
                     {
@@ -396,6 +445,56 @@
                         {
                             animation.stop();
                         }
+                    }
+                    function updateHighscore()
+                    {
+                        document.getElementById("highscoretext").innerHTML="Highscore "+highscoreValue;
+                    }
+                    function addHighscoreValue(value)
+                    {
+                        highscoreValue=highscoreValue+value;
+                    }
+                    function timer()
+                    {
+                        var parseError =  parseInt(clock.getElapsedTime());
+                        minute = parseInt(parseError/60);
+                        second = parseInt(clock.getElapsedTime())%60;
+                        if(minute<10)
+                        {
+                           minute ="0"+minute;
+                        }
+                        if(minute>=60)
+                        {
+                            minute=59;
+                        }
+                        if(second<10)
+                        {
+                            second="0"+second;
+                        }
+                        document.getElementById("timeviewtext").innerHTML=minute+":"+second;
+                        
+//                        var minute=time/60;
+//                        var second=time%60;
+
+//                        String min,sec;
+//                        if(minute<10)
+//                        {
+//                                min="0"+minute;
+//                        }
+//                        else
+//                        {
+//                                min=""+minute;
+//                        }
+//                        if(second<10)
+//                        {
+//                                sec="0"+second;
+//                        }
+//                        else
+//                        {
+//                                sec=""+second;
+//                        }
+////						timeCounterText.setText(min+":"+sec);
+//                        Log.v("abbc", "#"+min+":"+sec);
                     }
 		</script>
 	</body>

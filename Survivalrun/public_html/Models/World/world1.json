@@ -11,7 +11,7 @@
         "transparent": false,
         "blending": "NormalBlending",
         "depthWrite": true,
-        "shading": "phong",
+        "shading": "lambert",
         "colorAmbient": [0.64,0.64,0.64],
         "opacity": 1,
         "wireframe": false,
