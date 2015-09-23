@@ -69,6 +69,7 @@
                     var escMenu;
                     var highscoreValue;
                     var saw;
+                    var localSeconds=0;
                     
                     
                     //init
@@ -189,9 +190,9 @@
                         colliderObject.push(world1);
                         });
                         //Saw
-                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/World/Misc/saw.png' );
+                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
                         worldTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/World/Misc/saw.json", function(geometry){
+                        objLoader.load( "Models/Misc/saw.json", function(geometry){
                         var materialworld = new THREE.MeshLambertMaterial({ map: sawTexture});
                         saw = new THREE.Mesh(geometry, materialworld);
                         saw.castShadow=true;
@@ -200,7 +201,7 @@
                         saw.position.x = -50;
                         saw.scale.set(5,5,5);
                         scene.add(saw);
-                        sawcolliderdw.push(world1);
+//                        sawcolliderdw.push(world1);
                         });
 //                        //doors
 //                        var door1;
@@ -246,6 +247,15 @@
                         skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
                         skyBox.scale.set(5,5,5);
                         scene.add( skyBox );
+                        
+                        //Start Timed Highscore
+                        setInterval(function() {
+                            ++localSeconds;
+                            if((localSeconds%5)==0)
+                            {
+                                addHighscoreSeconds();
+                            }
+                          }, 1000);
                     }
                     function animate() 
                     {
@@ -253,7 +263,7 @@
                         renderer.render( scene, camera );
                         if(!menuScene)
                         {
-                            THREE.AnimationHandler.update( clock.getDelta()*20 );
+                            THREE.AnimationHandler.update( clock.getDelta()*30 );
                             keyboardInput();
                             collisionDetection();
                             world1Events()
@@ -480,12 +490,15 @@
                     {
                         highscoreValue=highscoreValue+value;
                     }
+                    function addHighscoreSeconds()
+                    {
+                        highscoreValue=highscoreValue+10;
+                    }
                     function timer()
                     {
                         var parseError =  parseInt(clock.getElapsedTime());
                         minute = parseInt(parseError/60);
                         second = parseInt(clock.getElapsedTime())%60;
-                        addHighscoreValue(parseInt(clock.getDelta()*clock.getElapsedTime()*3000));
                         if(minute<10)
                         {
                            minute ="0"+minute;
