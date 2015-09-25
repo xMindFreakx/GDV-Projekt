@@ -62,7 +62,9 @@
 
 //Gamerule Variablen
             var health;
-            var invincible;
+            var maxHealth;
+            var invincibleTimer;
+            var isInvincible;
             var counter;
 
 //Calls
@@ -74,6 +76,9 @@
 //Main Start
             function init()
             {
+                isInvincible = false;
+                maxHealth = 10;
+                
                 //Init Variables
                 controls = {
                     left: false,
@@ -288,19 +293,17 @@
                         player.position.x = oldx;
                         if (collisionEnemy.length > 0)
                         {
-                            //console.log(health);
-
-                            invincible = window.setTimeout(function () {
-                                health -= 1;
-                                //console.log(health);
-                                if (health <= 0)
+                            if(!isInvincible)
+                            {
+                                healthStatus(true);
+                            }
+                            else
+                            {
+                                if(invincibleTimer.getElapsedTime() >= 3)
                                 {
-                                    //console.log("TOT");
-                                    //console.log(health);
+                                    isInvincible=false;
                                 }
-                                window.clearTimeout(invincible);
-
-                            }, 2000);
+                            }
                         }
                     }
                 }
@@ -316,18 +319,18 @@
                         //console.log(collisionEnemy.length);
                         if (collisionEnemy.length > 0)
                         {
-                            //console.log(health);
-                            invincible = window.setTimeout(function () {
-                                health -= 1;
-                                //console.log(health);
-                                if (health <= 0)
+                            
+                            if(!isInvincible)
+                            {
+                                healthStatus(true);
+                            }
+                            else
+                            {
+                                if(invincibleTimer.getElapsedTime() >= 3)
                                 {
-                                    //console.log("TOT");
-                                    //console.log(health);
+                                    isInvincible=false;
                                 }
-
-                                window.clearTimeout(invincible);
-                            }, 2000);
+                            }
                         }
                     }
                 }
@@ -344,19 +347,17 @@
                         //console.log(collisionEnemy.length);
                         if (collisionEnemy.length > 0)
                         {
-                            //console.log(health);
-                            invincible = window.setTimeout(function () {
-
-                                health -= 1;
-
-                                //console.log(health);
-                                if (health <= 0)
+                            if(!isInvincible)
+                            {
+                                healthStatus(true);
+                            }
+                            else
+                            {
+                                if(invincibleTimer.getElapsedTime() >= 3)
                                 {
-                                    //console.log("TOT");
-                                    //console.log(health);
+                                    isInvincible=false;
                                 }
-                                window.clearTimeout(invincible);
-                            }, 2000);
+                            }
                         }
 
                     }
@@ -459,18 +460,19 @@
                     jumpReady = false;
                 }
             }
-//aktuell unbenutzt
-//KNOWN BUG:INVINCIBLE FUNKTIONIERT NICHT RICHTIG
-            function healthstatus(status)
+
+            function healthStatus(status)
             {
-                invincible = window.setTimeout(function (status) {
+
                     if (status === true)
                     {
+                        isInvincible=true;
                         health -= 1;
                         console.log(health);
+                        invincibleTimer = new THREE.Clock();
                     }
 
-                    else if (status === false && health <= 9)
+                    else if (status === false && health < maxHealth)
                     {
                         health += 1;
                         console.log(health);
@@ -481,9 +483,6 @@
                         console.log("TOT");
                         console.log(health);
                     }
-                }, 100);
-
-                window.clearTimeout(invincible);
             }
         </script>
     </body>
