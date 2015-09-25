@@ -12,15 +12,16 @@
             GDV Project 2015 - Gruppe NR. 5  - Survivalrun
                     created by
                     Andreas Maisch
-                    Maxi Hartmann
-                    Anton Stein
                     Patrick Kiermasch
         -->
 	<body>
             
-            
             <div id="highscoreview">
                 <a id="highscoretext">Highscore</a>
+            </div>
+            <div id="hpammo">
+                <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><br>
+                <a id="ammo">0 x </a><img src="GUI/arrow.png" height="40">
             </div>
             <div id="timeview">
                 <a id="timeviewtext">00:00</a>
@@ -28,26 +29,11 @@
             <div id="pause">
                 <a id="pausetext"></a>
             </div>
-                 <!--Three.js-->
 		<script>
-                    //ESC
-                     $(document).keyup(function (e) {
-                            if(e.which == 27) {
-                                 if(!escMenu)
-                                 {
-                                     escMenu=true;
-                                     document.getElementById("pausetext").innerHTML="~ Pause ~";
-                                 }
-                                 else
-                                 {
-                                     escMenu=false;
-                                     document.getElementById("pausetext").innerHTML="";
-                                 }
-                             }
-                         });
-                    
                     //Variables
-                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed;
+                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed,playerHP,playerArrow;
+                    var sword,bow;
+                    var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying;
                     var sawSpeed;
                     var rayCaster;
                     var oldx,oldy;
@@ -61,18 +47,140 @@
                     var objLoader;
                     var colliderObject=[];
                     var sawcollider=[];
-                    var animation;
                     var menuScene;
                     var skyBox;
-                    var animationdoor1,door1clock;
-                    var animationdoor2,door2clock;
                     var escMenu;
                     var highscoreValue;
                     var saw;
                     var localSeconds=0;
                     
-                    
-                    //init
+                    //HMTL
+
+                    //ESC-Pause
+                     $(document).keyup(function (e) {
+                            if(e.which == 27) {
+                                 if(!escMenu)
+                                 {
+                                    escMenu=true;
+                                    document.getElementById("pausetext").innerHTML="~ Pause ~";
+                                 }
+                                 else
+                                 {
+                                    escMenu=false;
+                                    document.getElementById("pausetext").innerHTML="";
+                                 }
+                             }
+                         });
+                         //Weapons
+                        $(document).keydown(function (e) {
+                            if(!escMenu)
+                            {
+                                if(e.keyCode==32 && !animationSwordPlaying)
+                                {
+                                    playerSwordAttack();
+                                }
+                                if(e.keyCode==67 && !animationBowPlaying)
+                                {
+                                    console.log("attack");
+//                                    playerBowAttack();
+                                }
+                            }
+                         });
+                        //Controls
+                        $(document).keydown(function (e) {
+                            if(!escMenu)
+                            {
+                                switch (e.keyCode) {
+                                    case 65:
+                                        controls.left = true;
+                                        break;
+                                    case 87:
+                                        controls.up = true;
+                                        break;
+                                    case 68:
+                                        controls.right = true;
+                                        break;
+                                    case 83:
+                                        controls.down = true;
+                                        break;
+                                }
+                            }
+                         });
+                        $(document).keyup(function (e) {
+                            if(!escMenu)
+                            {
+                                switch (e.keyCode) {
+                                    case 65:
+                                        controls.left = false;
+                                        break;
+                                    case 87:
+                                        controls.up = false;
+                                        break;
+                                    case 68:
+                                        controls.right = false;
+                                        break;
+                                    case 83:
+                                        controls.down = false;
+                                        break;
+                                }
+                            }
+                        });
+                         
+                         //HP-Bar
+                        function removeHeartHTML()
+                        {
+                           if(playerHP>0)
+                           {
+                               document.getElementById("heart"+playerHP).src="GUI/heartempty.png";
+                           }
+                           if(playerHP===0)
+                           {
+                               $("#heart1").hide();
+                               $("#heart2").hide();
+                               $("#heart3").hide();
+                               //deathscreen
+                           }
+                           playerHP--;
+                        }
+                        function addHeartHTML()
+                        {
+                           if(playerHP=>4)
+                           {
+                              //do nothing
+                           }
+                           else
+                           {
+                               playerHP++;
+                               document.getElementById("heart"+playerHP).src="GUI/heart.png";
+                           }
+
+                        }
+                        function addArrowHTML()
+                        {
+                           if(playerArrow=>9)
+                           {
+                              //do nothing
+                           }
+                           else
+                           {
+                               playerArrow++;
+                               document.getElementById("ammo").innerHTML=+playerArrow+" x ";
+                           }
+                        }
+                        function removeArrowHTML()
+                        {
+                           if(playerArrow<1)
+                           {
+                              //do nothing
+                           }
+                           else
+                           {
+                               playerArrow--;
+                               document.getElementById("ammo").innerHTML=+playerArrow+" x ";
+                           }
+                        }
+                        
+                    //THREE JS
                      init();
                     //Main Start
                     function init() 
@@ -97,6 +205,8 @@
                         sawSpeed=0.4;
                         jumpSpeed=1;
                         fallSpeed=0.35;
+                        playerHP=3;
+                        playerArrow=0;
                         
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
@@ -121,7 +231,6 @@
                         document.body.appendChild( renderer.domElement );
                         //Menuscreen
 //                        createMenu();
-//                        
                         //World 1
                         createPlayer(0,20.5);
 //                        createMenu();
@@ -142,9 +251,37 @@
                         player.castShadow =true;
                         player.receiveShadow =true;
                         scene.add( player );
-                        animation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                        playerAnimation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         }); 
                        
+                    }
+                    function playerSwordAttack()
+                    {
+                        objLoader.load( "Models/Player/sword.json", function( geometry,materials ) {
+                              for ( var k in materials ) 
+                              {
+                                   materials[k].skinning = true;
+                              }
+                        sword = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        sword.position.y = player.position.y;
+                        sword.position.x = player.position.x;
+                        sword.scale.set(5,5,5);
+                        sword.castShadow =true;
+                        sword.receiveShadow =true;
+                        scene.add( sword );
+                        animationSword = new THREE.Animation( sword, sword.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                        animationSword.play();
+                        animationSword.loop=false;
+                        animationSwordPlaying=true;
+                        });
+                    }
+                    function playerBowAttack()
+                    {
+				var loader = new THREE.ObjectLoader();
+            loader.load( "Models/Player/sword.json", function ( object ) {
+                        scene.add( object );
+            } );
+
                     }
                     function createMenu()
                     {
@@ -165,8 +302,8 @@
                         sunLight.shadowDarkness = 1.95;
                         sunLight.intensity = 0.1;
                         sunLight.castShadow = true;
-                        sunLight.shadowMapHeight = 2048; // default is 512
-                        sunLight.shadowMapWidth = 2048; // default is 512
+                        sunLight.shadowMapHeight = 4098;
+                        sunLight.shadowMapWidth = 4098;
                         scene.add(sunLight)
                         
                         //world-light
@@ -189,6 +326,21 @@
                         scene.add(world1);
                         colliderObject.push(world1);
                         });
+                        var door;
+                        var doorTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/door.png' );
+                        worldTexture.minFilter = THREE.NearestFilter;
+                        objLoader.load( "Models/Misc/door.json", function(geometry){
+                        var materialdoor = new THREE.MeshLambertMaterial({ map: doorTexture});
+                        door = new THREE.Mesh(geometry, materialdoor);
+                        door.castShadow=true;
+                        door.receiveShadow=true;
+                        door.position.y = 8;
+                        door.position.x = 282;
+                        door.position.z = 9;
+                        door.scale.set(5,5,5);
+                        scene.add(door);
+                        });
+                        
                         //Saw
                         var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
                         worldTexture.minFilter = THREE.NearestFilter;
@@ -203,35 +355,7 @@
                         scene.add(saw);
 //                        sawcolliderdw.push(world1);
                         });
-//                        //doors
-//                        var door1;
-//                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
-//                              for ( var k in materials ) 
-//                              {
-//                                   materials[k].skinning = true;
-//                              }
-//                        door1 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-//                        door1.position.y = 7;
-//                        door1.position.x = 225; 
-//                        door1.scale.set(5,5,5);
-//                        scene.add( door1 );
-//                        animationdoor1 = new THREE.Animation( door1, door1.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-//                       }); 
-//                       
-//                        var door2;
-//                        objLoader.load( "Models/World/Misc/door.json", function( geometry,materials ) {
-//                              for ( var k in materials ) 
-//                              {
-//                                   materials[k].skinning = true;
-//                              }
-//                        door2 = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-//                        door2.position.y = 7;
-//                        door2.position.x = 315; 
-//                        door2.scale.set(5,5,5);
-//                        scene.add( door2 );
-//                        animationdoor2 = new THREE.Animation( door2, door2.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-//                       }); 
-                       
+                        
                         //skybox
                         var skyPath = "Models/World/Skybox/sky";
                         var skyDir  = ["left", "right", "up", "down", "back", "front"];
@@ -264,7 +388,6 @@
                         if(!menuScene)
                         {
                             THREE.AnimationHandler.update( clock.getDelta()*30 );
-                            keyboardInput();
                             collisionDetection();
                             world1Events()
                             delta = clock.getDelta(); // delta time;
@@ -273,30 +396,12 @@
                             camerafollower();
                             updateHighscore();
                             timer();
+                            playerControls();
+                            weaponControls();
                         }
                     }
                     function world1Events()
                     {
-//                        //door1
-//                        if(player.position.x < 3)
-//                        {
-//                            animationdoor1.play();
-//                            door1clock = clock.getElapsedTime()+1;
-//                        }
-//                        if(clock.getElapsedTime() > door1clock)
-//                        {
-//                            animationdoor1.stop();
-//                        }
-//                        //door2
-//                        if(player.position.x < 61)
-//                        {
-//                            animationdoor2.play();
-//                            door2clock = clock.getElapsedTime()+1;
-//                        }
-//                        if(clock.getElapsedTime() > door2clock)
-//                        {
-//                            animationdoor2.stop();
-//                        }
                         if(!escMenu)
                         {
                             saw.translateX( sawSpeed );
@@ -382,48 +487,6 @@
                             }
                         }
                     }
-                    function keyboardInput()
-                    {
-                        $(document).keydown(function (e) {
-                            if(!escMenu)
-                            {
-                                switch (e.keyCode) {
-                                    case 65:
-                                        controls.left = true;
-                                        break;
-                                    case 87:
-                                        controls.up = true;
-                                        break;
-                                    case 68:
-                                        controls.right = true;
-                                        break;
-                                    case 83:
-                                        controls.down = true;
-                                        break;
-                                }
-                            }
-                         });
-                        $(document).keyup(function (e) {
-                            if(!escMenu)
-                            {
-                                switch (e.keyCode) {
-                                    case 65:
-                                        controls.left = false;
-                                        break;
-                                    case 87:
-                                        controls.up = false;
-                                        break;
-                                    case 68:
-                                        controls.right = false;
-                                        break;
-                                    case 83:
-                                        controls.down = false;
-                                        break;
-                                }
-                            }
-                         });
-                        playerControls();
-                     }
                     function playerControls()
                     {
                         playerMoveAnimation();
@@ -468,18 +531,31 @@
                              jumpReady=false;
                          }
                     }
+                    function weaponControls()
+                    {
+                        if(animationSwordPlaying)
+                        {
+                            sword.position.x=player.position.x;
+                            sword.position.y=player.position.y;
+                            if(!animationSword.isPlaying)
+                            {
+                                animationSwordPlaying=false;
+                                scene.remove(sword);
+                            }
+                        }
+                    }
                     function playerMoveAnimation()
                     {
-                        if(controls.left || controls.right || controls.up || jumpReady)
+                        if(controls.left || controls.right || controls.up)
                         {
-                            if(!animation.isPlaying)
+                            if(!playerAnimation.isPlaying)
                             {
-                                animation.play(animation.currentTime);
+                                playerAnimation.play(playerAnimation.currentTime);
                             }
                         }
                         else
                         {
-                            animation.stop();
+                            playerAnimation.stop();
                         }
                     }
                     function updateHighscore()
