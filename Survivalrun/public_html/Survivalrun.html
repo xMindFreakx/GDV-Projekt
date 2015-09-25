@@ -15,13 +15,12 @@
                     Patrick Kiermasch
         -->
 	<body>
-            
             <div id="highscoreview">
-                <a id="highscoretext">Highscore</a>
+                <a id="highscoretext">Highscore 0</a>
             </div>
             <div id="hpammo">
                 <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><br>
-                <a id="ammo">0 x </a><img src="GUI/arrow.png" height="40">
+                <a id="ammo">2 x </a><img src="GUI/arrow.png" height="40">
             </div>
             <div id="timeview">
                 <a id="timeviewtext">00:00</a>
@@ -29,17 +28,19 @@
             <div id="pause">
                 <a id="pausetext"></a>
             </div>
+             <div id="ammotxt">
+                <a id="noammotext"></a>
+            </div>
 		<script>
                     //Variables
-                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed,playerHP,playerArrow;
-                    var sword,bow;
+                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,playerMoveSpeed,fallSpeed,playerHP,playerArrowAmmo,arrowSpeed,arrowInScene;
+                    var sword,bow,arrow,arrowAirTime;
                     var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying,animationLoaded;
                     var sawSpeed;
                     var rayCaster;
                     var oldx,oldy;
                     var collisions;
                     var renderer, scene, camera;
-                    var clock,delta;
                     var orbitController;
                     var controls;
                     var ray;
@@ -50,9 +51,11 @@
                     var menuScene;
                     var skyBox;
                     var escMenu;
-                    var highscoreValue;
+                    var highscoreValue,highscoreEverySecondsAmount;
                     var saw;
-                    var localSeconds=0;
+                    
+                    //time vars
+                    var clock,localSeconds=0,localTimeID,outOfAmmoTime;
                     
                     //HMTL
 
@@ -63,11 +66,13 @@
                                  {
                                     escMenu=true;
                                     document.getElementById("pausetext").innerHTML="~ Pause ~";
+                                    stopLocalTime();
                                  }
                                  else
                                  {
                                     escMenu=false;
                                     document.getElementById("pausetext").innerHTML="";
+                                    startLocalTime();
                                  }
                              }
                          });
@@ -79,16 +84,19 @@
                                 {
                                     playerSwordAttack(player.position.x,player.position.y);
                                 }
-                                if(e.keyCode==67 && !animationBowPlaying && !animationSwordPlaying)
+                                if(e.keyCode==67 && !animationBowPlaying && !animationSwordPlaying && !arrowInScene && playerArrowAmmo>0)
                                 {
                                     playerBowAttack(player.position.x,player.position.y);
+                                }
+                                if(e.keyCode==67 && playerArrowAmmo<=0)
+                                {
+                                    document.getElementById("noammotext").innerHTML="~ out of ammo ~";
+                                    outOfAmmoTime=localSeconds+2;
                                 }
                             }
                          });
                         //Controls
                         $(document).keydown(function (e) {
-                            if(!escMenu)
-                            {
                                 switch (e.keyCode) {
                                     case 65:
                                         controls.left = true;
@@ -103,11 +111,8 @@
                                         controls.down = true;
                                         break;
                                 }
-                            }
                          });
                         $(document).keyup(function (e) {
-                            if(!escMenu)
-                            {
                                 switch (e.keyCode) {
                                     case 65:
                                         controls.left = false;
@@ -122,62 +127,109 @@
                                         controls.down = false;
                                         break;
                                 }
-                            }
                         });
-                         
+                        //Time
+                    function startLocalTime()
+                    {
+                        localTimeID =  window.setInterval(function() {
+                        ++localSeconds;
+                        timer();
+                        if((localSeconds%5)==0)
+                        {
+                            addHighscoreValue(highscoreEverySecondsAmount);
+                        }
+                      }, 1000);
+                    }
+                    function stopLocalTime()
+                    {
+                        window.clearInterval(localTimeID);
+                    }
                          //HP-Bar
-                        function removeHeartHTML()
-                        {
-                           if(playerHP>0)
-                           {
-                               document.getElementById("heart"+playerHP).src="GUI/heartempty.png";
-                           }
-                           if(playerHP===0)
-                           {
-                               $("#heart1").hide();
-                               $("#heart2").hide();
-                               $("#heart3").hide();
-                               //deathscreen
-                           }
-                           playerHP--;
-                        }
-                        function addHeartHTML()
-                        {
-                           if(playerHP=>4)
-                           {
-                              //do nothing
-                           }
-                           else
-                           {
-                               playerHP++;
-                               document.getElementById("heart"+playerHP).src="GUI/heart.png";
-                           }
+                    function removeHeartHTML()
+                    {
+                       if(playerHP>0)
+                       {
+                           document.getElementById("heart"+playerHP).src="GUI/heartempty.png";
+                       }
+                       if(playerHP===0)
+                       {
+                           $("#heart1").hide();
+                           $("#heart2").hide();
+                           $("#heart3").hide();
+                           //deathscreen
+                       }
+                       playerHP--;
+                    }
+                    function addHeartHTML()
+                    {
+                       if(playerHP=>4)
+                       {
+                          //do nothing
+                       }
+                       else
+                       {
+                           playerHP++;
+                           document.getElementById("heart"+playerHP).src="GUI/heart.png";
+                       }
 
-                        }
-                        function addArrowHTML()
+                    }
+                    function addArrowHTML()
+                    {
+                       if(playerArrowAmmo=>9)
+                       {
+                          //do nothing
+                       }
+                       else
+                       {
+                           playerArrowAmmo++;
+                           document.getElementById("ammo").innerHTML=+playerArrowAmmo+" x ";
+                       }
+                    }
+                    function removeArrowHTML()
+                    {
+                       if(playerArrowAmmo<1)
+                       {
+                          //do nothing
+                       }
+                       else
+                       {
+                           playerArrowAmmo--;
+                           document.getElementById("ammo").innerHTML=+playerArrowAmmo+" x ";
+                       }
+                    }
+                    function outOfAmmoHTML()
+                    {
+                        if(localSeconds>=outOfAmmoTime)
                         {
-                           if(playerArrow=>9)
-                           {
-                              //do nothing
-                           }
-                           else
-                           {
-                               playerArrow++;
-                               document.getElementById("ammo").innerHTML=+playerArrow+" x ";
-                           }
+                            document.getElementById("noammotext").innerHTML="";
                         }
-                        function removeArrowHTML()
+                    }
+                    function updateHighscore()
+                    {
+                        document.getElementById("highscoretext").innerHTML="Highscore "+highscoreValue;
+                    }
+                    function addHighscoreValue(value)
+                    {
+                        highscoreValue=highscoreValue+value;
+                    }
+                    function timer()
+                    {
+                        minute = parseInt(localSeconds/60);
+                        second = parseInt(localSeconds%60);
+                        if(minute<10)
                         {
-                           if(playerArrow<1)
-                           {
-                              //do nothing
-                           }
-                           else
-                           {
-                               playerArrow--;
-                               document.getElementById("ammo").innerHTML=+playerArrow+" x ";
-                           }
+                           minute ="0"+minute;
                         }
+                        if(minute>=60)
+                        {
+                            minute=59;
+                        }
+                        if(second<10)
+                        {
+                            second="0"+second;
+                        }
+                        document.getElementById("timeviewtext").innerHTML=minute+":"+second;
+                    }
                     //THREE JS
                      init();
                     //Main Start
@@ -199,12 +251,15 @@
                         highscoreValue=0;
                         
                         //Playersettings
-                        moveSpeed=0.6;
+                        playerMoveSpeed=0.6;
                         sawSpeed=0.4;
                         jumpSpeed=1;
                         fallSpeed=0.35;
                         playerHP=3;
-                        playerArrow=0;
+                        playerArrowAmmo=2;
+                        arrowSpeed=playerMoveSpeed*3;
+                        
+                        highscoreEverySecondsAmount=10;
                         
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
@@ -232,7 +287,7 @@
                         //Preload Texture
                         preLoadWeapons();
                         //World 1
-                        createPlayer(0,20.5);
+                        createPlayer(8,20.5); //8
 //                        createMenu();
                        createWorld1();
                        animate();
@@ -294,6 +349,33 @@
                         animationBow.loop=false;
                         animationBowPlaying=true;
                         });
+                        var arrowTex = new THREE.ImageUtils.loadTexture( 'Models/Player/arrow.png' );
+                        arrowTex.minFilter = THREE.NearestFilter;
+                        objLoader.load( "Models/Player/arrow.json", function(geometry){
+                        var arrowMat = new THREE.MeshLambertMaterial({ map: arrowTex});
+                        arrow = new THREE.Mesh(geometry, arrowMat);
+                        arrow.castShadow=true;
+                        arrow.receiveShadow=true;
+                        arrow.position.y = player.position.y;
+                        arrow.position.x = player.position.x;
+                        arrow.scale.set(5,5,5);
+                        scene.add(arrow);
+                        removeArrowHTML();
+                        arrowInScene=true;
+                        arrowAirTime = localSeconds+2;
+//                        arrowCollision(arrow);
+                        });
+                    }
+                    function arrowCollision()
+                    {
+                        arrow.translateX( arrowSpeed );
+                        rayCaster = new THREE.Raycaster(new THREE.Vector3(arrow.position.x+6, arrow.position.y+9, arrow.position.z-0.15),new THREE.Vector3(1,0,0),0,2);
+                        collisions = rayCaster.intersectObjects(colliderObject);
+                        if(collisions.length > 0 || localSeconds >=arrowAirTime)
+                        {
+                            scene.remove(arrow);
+                            arrowInScene=false;
+                        }
                     }
                     function preLoadWeapons()
                     {
@@ -416,39 +498,18 @@
                         skyBox.scale.set(5,5,5);
                         scene.add( skyBox );
                         
-                        //Start Timed Highscore
-                        setInterval(function() {
-                            ++localSeconds;
-                            if((localSeconds%5)==0)
-                            {
-                                addHighscoreSeconds();
-                            }
-                          }, 1000);
-                    }
-                    function animate() 
-                    {
-                        requestAnimationFrame(animate);
-                        renderer.render( scene, camera );
-                        if(!menuScene)
-                        {
-                            THREE.AnimationHandler.update( clock.getDelta()*30 );
-                            collisionDetection();
-                            world1Events()
-                            delta = clock.getDelta(); // delta time;
-                            //orbitcontrols tests
-                            orbitController.update(); 
-//                            camerafollower();
-                            updateHighscore();
-                            timer();
-                            playerControls();
-                            weaponControls();
-                        }
+                        //Time
+                        startLocalTime();
                     }
                     function world1Events()
                     {
                         if(!escMenu)
                         {
                             saw.translateX( sawSpeed );
+                            if(arrowInScene)
+                            {
+                                arrowCollision();
+                            }
                         }
                     }
                     function camerafollower()
@@ -534,46 +595,49 @@
                     function playerControls()
                     {
                         playerMoveAnimation();
-                        if(isGround)
+                        if(!escMenu)
                         {
-                            //JumpPause
-                            if(groundTimer)
+                            if(isGround)
                             {
-                                jumpPause = clock.getElapsedTime();
-                                groundTimer=false;
+                                //JumpPause
+                                if(groundTimer)
+                                {
+                                    jumpPause = clock.getElapsedTime();
+                                    groundTimer=false;
+                                }
+                                if(clock.getElapsedTime()> jumpPause+0.08 && !groundTimer)
+                                {
+                                    jumpReady=true;
+                                    jumpTime =clock.getElapsedTime()
+                                }
                             }
-                            if(clock.getElapsedTime()> jumpPause+0.08 && !groundTimer)
+                            else
                             {
-                                jumpReady=true;
-                                jumpTime =clock.getElapsedTime()
+                                groundTimer=true;
                             }
-                        }
-                        else
-                        {
-                            groundTimer=true;
-                        }
-                         if(controls.left==true)
-                         {
-                            oldx=player.position.x;
-                            player.translateX( -moveSpeed );
-                         }
-                         if(controls.right==true)
-                         {
-                            oldx=player.position.x;
-                            player.translateX( moveSpeed );
-                         }
-                         if(controls.up==true)
-                         {
-                             if(clock.getElapsedTime()<(jumpTime+0.5) && jumpReady)
+                             if(controls.left==true)
                              {
-                                 player.translateY( jumpSpeed );
-                                 jumpPause = clock.getElapsedTime()*clock.getDelta()*100;
+                                oldx=player.position.x;
+                                player.translateX( -playerMoveSpeed );
                              }
-                         }
-                         else
-                         {
-                             jumpReady=false;
-                         }
+                             if(controls.right==true)
+                             {
+                                oldx=player.position.x;
+                                player.translateX( playerMoveSpeed );
+                             }
+                             if(controls.up==true)
+                             {
+                                 if(clock.getElapsedTime()<(jumpTime+0.5) && jumpReady)
+                                 {
+                                     player.translateY( jumpSpeed );
+                                     jumpPause = clock.getElapsedTime()*clock.getDelta()*100;
+                                 }
+                             }
+                             else
+                             {
+                                 jumpReady=false;
+                             }
+                        }
                     }
                     function weaponControls()
                     {
@@ -600,7 +664,7 @@
                     }
                     function playerMoveAnimation()
                     {
-                        if(controls.left || controls.right || controls.up)
+                        if((controls.left || controls.right || controls.up) && !escMenu)
                         {
                             if(!playerAnimation.isPlaying)
                             {
@@ -612,36 +676,23 @@
                             playerAnimation.stop();
                         }
                     }
-                    function updateHighscore()
+                    function animate() 
                     {
-                        document.getElementById("highscoretext").innerHTML="Highscore "+highscoreValue;
-                    }
-                    function addHighscoreValue(value)
-                    {
-                        highscoreValue=highscoreValue+value;
-                    }
-                    function addHighscoreSeconds()
-                    {
-                        highscoreValue=highscoreValue+10;
-                    }
-                    function timer()
-                    {
-                        var parseError =  parseInt(clock.getElapsedTime());
-                        minute = parseInt(parseError/60);
-                        second = parseInt(clock.getElapsedTime())%60;
-                        if(minute<10)
+                        requestAnimationFrame(animate);
+                        renderer.render( scene, camera );
+                        if(!menuScene)
                         {
-                           minute ="0"+minute;
+                            THREE.AnimationHandler.update( 0.05 );
+                            collisionDetection();
+                            world1Events();
+                            //orbitcontrols tests
+//                            orbitController.update(); 
+                            outOfAmmoHTML();
+                            camerafollower();
+                            updateHighscore();
+                            playerControls();
+                            weaponControls();
                         }
-                        if(minute>=60)
-                        {
-                            minute=59;
-                        }
-                        if(second<10)
-                        {
-                            second="0"+second;
-                        }
-                        document.getElementById("timeviewtext").innerHTML=minute+":"+second;
                     }
 		</script>
 	</body>

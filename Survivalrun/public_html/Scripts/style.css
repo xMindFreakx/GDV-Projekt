@@ -52,6 +52,16 @@
        font-family: sans-serif;
        color: white;
     }
+    #ammotxt{
+       position: fixed;
+       text-align: center;
+       bottom: 10%;
+       left: 50%;
+       margin-left: -130px;
+       font-size: 50px;
+       font-family: sans-serif;
+       color: white;
+    }
     #pause{
        position: fixed;
        text-align: center;
@@ -63,4 +73,6 @@
        font-family: sans-serif;
        color: white;
     }
+  
+    
     
