@@ -44,9 +44,9 @@
         <script>
 //Variables
             var player, isGround, jumpReady, jumptime;
-            var rayCaster, rayCasterEnemy;
+            var rayCaster;
             var oldx, oldy;
-            var collisionObjects, collisionEnemy;
+            var collisionObjects;
             var renderer, scene, camera;
             var clock;
             var orbitController;
@@ -54,18 +54,19 @@
             var ray;
             var rayGround;
             var colliderObject = [];
-            var enemyObject = [];
+            var enemyObject = [];   //Array mit Gegenerobjekten
             
 //Enemyvariablen
             var enemySpeedZombie=0.025;
             var testEnemyBox1;
+
 
 //Gamerule Variablen
             var health;
             var maxHealth;
             var invincibleTimer;
             var isInvincible;
-            var counter;
+            var invincibleDuration;
 
 //Calls
             init();
@@ -78,6 +79,7 @@
             {
                 isInvincible = false;
                 maxHealth = 10;
+                invincibleDuration = 3;
                 
                 //Init Variables
                 controls = {
@@ -156,7 +158,7 @@
                 var boxGeo1 = new THREE.BoxGeometry(1, 2, 1);
                 var box2 = new THREE.Mesh(boxGeo1, boxMat1);
                 box2.position.y = 1;
-                box2.position.x = -2;
+                box2.position.x = 15;
                 scene.add(box2);
 
                 //colliderArray
@@ -170,7 +172,7 @@
                 var testEnemyMat1 = new THREE.MeshBasicMaterial({color: 0x000000});
                 var testEnemyGeo1 = new THREE.BoxGeometry(1, 2, 1);
                 testEnemyBox1 = new THREE.Mesh(testEnemyGeo1, testEnemyMat1);
-                testEnemyBox1.position.y = 1;
+                testEnemyBox1.position.y = 5;
                 testEnemyBox1.position.x = 15;
                 scene.add(testEnemyBox1);
 
@@ -191,16 +193,19 @@
 //---------------------------------------------------------------------------------------------------
             function addAI()
             {
-                enemyAI(testEnemyBox1);
+                enemyAI(testEnemyBox1); 
+                
             }
 //---------------------------------------------------------------------------------------------------
             function enemyAI(enemy)
             {
+                var rayCasterEnemy;
                 var collisionEnemys,    //Variable für die Playerkollision
                     collisionWorld;     //Variable für sonstige Hindernisse
                 var playerarray = [player];
 
-                rayCasterEnemy = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, 0, 0), 0, 5);       //Raycaster für den Player
+                //Abfrage nach Links
+                rayCasterEnemy = new THREE.Raycaster(new THREE.Vector3(enemy.position.x-0.525, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, 0, 0), 0, 5);       //Raycaster für den Player
                 rayCasterWorld = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, 0, 0), 0, 0.5);     //Raycaster für sonstige Hindernisse
                 collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
                 collisionWorld = rayCasterWorld.intersectObjects(colliderObject);       //Abfrage für sonstige Hindernisse in der Welt
@@ -211,11 +216,11 @@
                 }
                 else
                 {
-                    
+
                 }
                     
-
-                rayCasterEnemy = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(1, 0, 0), 0, 5);       //Raycaster für den Player
+                //Abfrage nach Rechts
+                rayCasterEnemy = new THREE.Raycaster(new THREE.Vector3(enemy.position.x+0.525, enemy.position.y, enemy.position.z), new THREE.Vector3(1, 0, 0), 0, 5);       //Raycaster für den Player
                 rayCasterWorld = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(1, 0, 0), 0, 0.5);     //Raycaster für sonstige Hindernisse
                 collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
                 collisionWorld = rayCasterWorld.intersectObjects(colliderObject);       //Abfrage für sonstige Hindernisse in der Welt
@@ -226,9 +231,10 @@
                 }
                 else
                 {
-                    
+
                 }
 
+                //Abfrage nach Oben
                 rayCasterEnemy = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(0, 1, 0), 0, 1);       //Raycaster für den Player
                 collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
                 collisionWorld = rayCasterWorld.intersectObjects(colliderObject);
@@ -246,6 +252,34 @@
                         scene.remove(enemy);
                     }
                     //delete colliderObject[index-1];
+                }
+                
+                //Abfrage nach Unten
+                var rayCasterWorldLeft = new THREE.Raycaster(new THREE.Vector3(enemy.position.x-0.5, enemy.position.y, enemy.position.z), new THREE.Vector3(0, -1, 0), 0, 1);      //Raycaster den linken Fuß
+                var rayCasterWorldRight = new THREE.Raycaster(new THREE.Vector3(enemy.position.x+0.5, enemy.position.y, enemy.position.z), new THREE.Vector3(0, -1, 0), 0, 1);     //Raycaster für den rechten Fuß
+                //collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
+                var collisionWorldLeft = rayCasterWorldLeft.intersectObjects(colliderObject);       //Abfrage für sonstige Hindernisse in der Welt
+                var collisionWorldRight = rayCasterWorldRight.intersectObjects(colliderObject);       //Abfrage für sonstige Hindernisse in der Welt
+                
+                if (collisionWorldLeft.length === 0 && collisionWorldRight.length === 0)
+                {
+                    enemy.translateY(-enemySpeedZombie);
+                }
+                else
+                {
+                    var rayCasterPlayerLeft = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, -0.5, 0), 0, 5);      //Raycaster den linken Fuß
+                    var rayCasterPlayerRight = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(1, -0.5, 0), 0, 5);     //Raycaster für den rechten Fuß
+                    //collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
+                    var playerLeft = rayCasterPlayerLeft.intersectObjects(playerarray);       //Abfrage für sonstige Hindernisse in der Welt
+                    var playerRight = rayCasterPlayerRight.intersectObjects(playerarray);       //Abfrage für sonstige Hindernisse in der Welt
+                    if (playerLeft.length > 0)
+                    {
+                        enemy.translateX(-enemySpeedZombie);
+                    }
+                    else if(playerRight.length > 0)
+                    {
+                        enemy.translateX(+enemySpeedZombie);
+                    }
                 }
 
             }
@@ -299,7 +333,7 @@
                             }
                             else
                             {
-                                if(invincibleTimer.getElapsedTime() >= 3)
+                                if(invincibleTimer.getElapsedTime() >= invincibleDuration)
                                 {
                                     isInvincible=false;
                                 }
@@ -326,7 +360,7 @@
                             }
                             else
                             {
-                                if(invincibleTimer.getElapsedTime() >= 3)
+                                if(invincibleTimer.getElapsedTime() >= invincibleDuration)
                                 {
                                     isInvincible=false;
                                 }
@@ -353,7 +387,7 @@
                             }
                             else
                             {
-                                if(invincibleTimer.getElapsedTime() >= 3)
+                                if(invincibleTimer.getElapsedTime() >= invincibleDuration)
                                 {
                                     isInvincible=false;
                                 }
