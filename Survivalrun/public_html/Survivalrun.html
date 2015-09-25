@@ -373,8 +373,12 @@
                         collisions = rayCaster.intersectObjects(colliderObject);
                         if(collisions.length > 0 || localSeconds >=arrowAirTime)
                         {
-                            scene.remove(arrow);
                             arrowInScene=false;
+                        }
+                        //sticky Arrow
+                        if(localSeconds >=arrowAirTime)
+                        {
+                            scene.remove(arrow);
                         }
                     }
                     function preLoadWeapons()
@@ -686,9 +690,9 @@
                             collisionDetection();
                             world1Events();
                             //orbitcontrols tests
-//                            orbitController.update(); 
+                            orbitController.update(); 
+//                            camerafollower();
                             outOfAmmoHTML();
-                            camerafollower();
                             updateHighscore();
                             playerControls();
                             weaponControls();
