@@ -33,7 +33,7 @@
                     //Variables
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,moveSpeed,fallSpeed,playerHP,playerArrow;
                     var sword,bow;
-                    var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying;
+                    var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying,animationLoaded;
                     var sawSpeed;
                     var rayCaster;
                     var oldx,oldy;
@@ -75,14 +75,13 @@
                         $(document).keydown(function (e) {
                             if(!escMenu)
                             {
-                                if(e.keyCode==32 && !animationSwordPlaying)
+                                if(e.keyCode==32 && !animationSwordPlaying && !animationBowPlaying)
                                 {
-                                    playerSwordAttack();
+                                    playerSwordAttack(player.position.x,player.position.y);
                                 }
-                                if(e.keyCode==67 && !animationBowPlaying)
+                                if(e.keyCode==67 && !animationBowPlaying && !animationSwordPlaying)
                                 {
-                                    console.log("attack");
-//                                    playerBowAttack();
+                                    playerBowAttack(player.position.x,player.position.y);
                                 }
                             }
                          });
@@ -179,7 +178,6 @@
                                document.getElementById("ammo").innerHTML=+playerArrow+" x ";
                            }
                         }
-                        
                     //THREE JS
                      init();
                     //Main Start
@@ -231,6 +229,8 @@
                         document.body.appendChild( renderer.domElement );
                         //Menuscreen
 //                        createMenu();
+                        //Preload Texture
+                        preLoadWeapons();
                         //World 1
                         createPlayer(0,20.5);
 //                        createMenu();
@@ -277,11 +277,55 @@
                     }
                     function playerBowAttack()
                     {
-				var loader = new THREE.ObjectLoader();
-            loader.load( "Models/Player/sword.json", function ( object ) {
-                        scene.add( object );
-            } );
-
+                        objLoader.load( "Models/Player/bow.json", function( geometry,materials ) {
+                              for ( var k in materials ) 
+                              {
+                                   materials[k].skinning = true;
+                              }
+                        bow = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        bow.position.y = player.position.y;
+                        bow.position.x = player.position.x;
+                        bow.scale.set(5,5,5);
+                        bow.castShadow =true;
+                        bow.receiveShadow =true;
+                        scene.add( bow );
+                        animationBow = new THREE.Animation( bow, bow.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                        animationBow.play();
+                        animationBow.loop=false;
+                        animationBowPlaying=true;
+                        });
+                    }
+                    function preLoadWeapons()
+                    {
+                        var obj;
+                        objLoader.load( "Models/Player/bow.json", function( geometry,materials ) {
+                              for ( var k in materials ) 
+                              {
+                                   materials[k].skinning = true;
+                              }
+                        obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        obj.position.y = player.position.y;
+                        obj.position.x = player.position.x;
+                        obj.scale.set(5,5,5);
+                        obj.castShadow =true;
+                        obj.receiveShadow =true;
+                        scene.add( obj );
+                        scene.remove(obj);
+                        });
+                        objLoader.load( "Models/Player/sword.json", function( geometry,materials ) {
+                              for ( var k in materials ) 
+                              {
+                                   materials[k].skinning = true;
+                              }
+                        obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        obj.position.y = player.position.y;
+                        obj.position.x = player.position.x;
+                        obj.scale.set(5,5,5);
+                        obj.castShadow =true;
+                        obj.receiveShadow =true;
+                        scene.add( obj );
+                        scene.remove(obj);
+                        });
                     }
                     function createMenu()
                     {
@@ -392,8 +436,8 @@
                             world1Events()
                             delta = clock.getDelta(); // delta time;
                             //orbitcontrols tests
-//                            orbitController.update(); 
-                            camerafollower();
+                            orbitController.update(); 
+//                            camerafollower();
                             updateHighscore();
                             timer();
                             playerControls();
@@ -533,16 +577,26 @@
                     }
                     function weaponControls()
                     {
-                        if(animationSwordPlaying)
-                        {
-                            sword.position.x=player.position.x;
-                            sword.position.y=player.position.y;
-                            if(!animationSword.isPlaying)
+                            if(animationSwordPlaying)
                             {
-                                animationSwordPlaying=false;
-                                scene.remove(sword);
+                                sword.position.x=player.position.x;
+                                sword.position.y=player.position.y;
+                                if(!animationSword.isPlaying)
+                                {
+                                    scene.remove(sword);
+                                    animationSwordPlaying=false;
+                                }
                             }
-                        }
+                            if(animationBowPlaying)
+                            {
+                                bow.position.x=player.position.x;
+                                bow.position.y=player.position.y;
+                                if(!animationBow.isPlaying)
+                                {
+                                    scene.remove(bow);
+                                    animationBowPlaying=false;
+                                }
+                            }
                     }
                     function playerMoveAnimation()
                     {
