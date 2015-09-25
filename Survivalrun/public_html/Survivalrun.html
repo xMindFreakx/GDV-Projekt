@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <meta name="author" content="Andreas Maisch Maxi Hartmann Anton Stein Patrick Kiermasch">
@@ -54,7 +55,8 @@
             var ray;
             var rayGround;
             var colliderObject = [];
-            var enemyObject = [];   //Array mit Gegenerobjekten
+            var enemyObject = [];               //Array mit Gegenerobjekten
+            var collectablesObject = [];        //Array mit Collectables
             
 //Enemyvariablen
             var enemySpeedZombie=0.025;
@@ -67,7 +69,15 @@
             var invincibleTimer;
             var isInvincible;
             var invincibleDuration;
-
+            var coinDropped;
+            var coinRayCaster;
+            var coinCollision;
+            
+            
+            var loadManager;
+            var objLoader;
+            var coin;
+            var rotationMatrix;
 //Calls
             init();
             animate();
@@ -80,6 +90,9 @@
                 isInvincible = false;
                 maxHealth = 10;
                 invincibleDuration = 3;
+                loadManager = new THREE.LoadingManager();
+                objLoader = new THREE.JSONLoader();
+                coinDropped = true;
                 
                 //Init Variables
                 controls = {
@@ -178,6 +191,18 @@
 
                 enemyObject.push(testEnemyBox1);
                 colliderObject.push(testEnemyBox1);
+                
+                
+                var coinTexture = new THREE.ImageUtils.loadTexture('Models/Misc/coin.png');
+                coinTexture.minFilter = THREE.NearestFilter;
+                var loader = new THREE.JSONLoader();
+                loader.load("Models/Misc/coin.json", function (geometry) {
+                    var material = new THREE.MeshBasicMaterial({map: coinTexture});//MeshLambertMaterial für shadow
+                    coin = new THREE.Mesh(geometry, material);
+                    coin.castShadow = true;
+                });
+                
+                collectablesObject.push(coin);
             }
 //---------------------------------------------------------------------------------------------------
             function animate()
@@ -189,6 +214,9 @@
                 //orbitcontrols tests
                 orbitController.update();
                 addAI();
+                coin.rotateOnAxis(new THREE.Vector3(0,1,0), Math.PI / 180);
+                coinDrop();
+                getCollectable(coin);
             }
 //---------------------------------------------------------------------------------------------------
             function addAI()
@@ -199,7 +227,7 @@
 //---------------------------------------------------------------------------------------------------
             function enemyAI(enemy)
             {
-                var rayCasterEnemy;
+                var rayCasterEnemy, rayCasterWorld;
                 var collisionEnemys,    //Variable für die Playerkollision
                     collisionWorld;     //Variable für sonstige Hindernisse
                 var playerarray = [player];
@@ -242,15 +270,7 @@
                 if (collisionEnemys.length > 0)
                 {
                     //console.log("Zeile3");
-                    var indexWorld = colliderObject.indexOf(enemy);
-                    var indexEnemy = enemyObject.indexOf(enemy);
-                    if(indexWorld > -1 && indexEnemy > -1)
-                    {
-                        colliderObject.splice(indexWorld, 1);
-                        enemyObject.splice(indexEnemy, 1);
-                        spawnLoot(enemy);
-                        scene.remove(enemy);
-                    }
+                    killEnemy(enemy);
                     //delete colliderObject[index-1];
                 }
                 
@@ -267,10 +287,9 @@
                 }
                 else
                 {
-                    var rayCasterPlayerLeft = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, -0.5, 0), 0, 5);      //Raycaster den linken Fuß
-                    var rayCasterPlayerRight = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(1, -0.5, 0), 0, 5);     //Raycaster für den rechten Fuß
-                    //collisionEnemys = rayCasterEnemy.intersectObjects(playerarray);         //Abfrage für den Player
-                    var playerLeft = rayCasterPlayerLeft.intersectObjects(playerarray);       //Abfrage für sonstige Hindernisse in der Welt
+                    var rayCasterPlayerLeft = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(-1, -0.5, 0), 0, 5);      //Raycaster für Player links unten
+                    var rayCasterPlayerRight = new THREE.Raycaster(new THREE.Vector3(enemy.position.x, enemy.position.y, enemy.position.z), new THREE.Vector3(1, -0.5, 0), 0, 5);     //Raycaster für Player rechts unten
+                    var playerLeft = rayCasterPlayerLeft.intersectObjects(playerarray);         //Abfrage für sonstige Hindernisse in der Welt
                     var playerRight = rayCasterPlayerRight.intersectObjects(playerarray);       //Abfrage für sonstige Hindernisse in der Welt
                     if (playerLeft.length > 0)
                     {
@@ -284,25 +303,99 @@
 
             }
 //---------------------------------------------------------------------------------------------------
+            function killEnemy(enemy)
+            {
+                var indexWorld = colliderObject.indexOf(enemy);
+                var indexEnemy = enemyObject.indexOf(enemy);
+                if(indexWorld > -1 && indexEnemy > -1)
+                {
+                    colliderObject.splice(indexWorld, 1);
+                    enemyObject.splice(indexEnemy, 1);
+                    spawnLoot(enemy);
+                    scene.remove(enemy);
+                }
+            }
+//---------------------------------------------------------------------------------------------------
+            function destroyCollectable(object)
+            {
+                var indexCollectable = collectablesObject.indexOf(object);
+                if(object === coin)
+                {
+                    coin.position.y = 100;
+                    coinDropped = true;
+                }
+                else
+                {
+                    if(indexCollectable > -1)
+                    {
+                        collectablesObject.splice(indexCollectable, 1);
+                        scene.remove(enemy);
+                    }
+                }
+                
+            }
+//---------------------------------------------------------------------------------------------------
+            function getCollectable(object)
+            {
+                var playerarray = [player];
+                var objectRayCaster, collisionPlayer;
+                objectRayCaster = new THREE.Raycaster(new THREE.Vector3(object.position.x-0.525, object.position.y, object.position.z), new THREE.Vector3(0, -1, 0), 0, 0.25);       //Raycaster für den Player
+                collisionPlayer = objectRayCaster.intersectObjects(playerarray);         //Abfrage für den Player
+                if (collisionPlayer.length > 0)
+                {
+                    console.log("Highscore +10");
+                    destroyCollectable(object);
+                }
+                else
+                {
+
+                }
+            }
+//---------------------------------------------------------------------------------------------------
             function spawnLoot(enemy)
             {
                 var locationX=enemy.position.x;
-                var locationY=enemy.position.y+1;
+                var locationY=enemy.position.y+3;
                 
                 var luckyNumber=Math.floor((Math.random() * 100) + 1);
                 if(luckyNumber >= 0 && luckyNumber <= 30)
                 {
-                    alert("Zahl: "+luckyNumber+" Position X:Y :"+locationX+":"+locationY+" Objekt:Herz");
+                    console.log("Zahl: "+luckyNumber+" Position X:Y :"+locationX+":"+locationY+" Objekt:Herz");
                 }
                 else if(luckyNumber > 30 && luckyNumber <= 60)
                 {
-                    alert("Zahl: "+luckyNumber+" Position X:Y :"+locationX+":"+locationY+" Objekt: Nix");
+                    console.log("Zahl: "+luckyNumber+" Position X:Y :"+locationX+":"+locationY+" Objekt: Nix");
                 }
                 else if(luckyNumber > 60 && luckyNumber <= 100)
                 {
-                    alert("Zahl: "+luckyNumber+" Position X:Y :"+locationX+":"+locationY+" Objekt: Item");
+                    scene.add(coin);
+                    coin.position.y = locationY;
+                    coin.position.x = locationX;
+                    coinRayCaster = new THREE.Raycaster(new THREE.Vector3(coin.position.x, coin.position.y, coin.position.z), new THREE.Vector3(0, -1, 0), 0, 1.5);      //Raycaster für coin
+                    coinCollision = coinRayCaster.intersectObjects(colliderObject);         //Abfrage für Boden
+                    if(coinCollision.length === 0)
+                    {
+                        coinDropped=false;
+                    }
+                    
                 }
-                
+            }
+//---------------------------------------------------------------------------------------------------
+            function coinDrop()
+            {
+                if(!coinDropped)
+                {
+                    coinRayCaster = new THREE.Raycaster(new THREE.Vector3(coin.position.x, coin.position.y, coin.position.z), new THREE.Vector3(0, -1, 0), 0, 1);      //Raycaster für coin
+                    coinCollision = coinRayCaster.intersectObjects(colliderObject);         //Abfrage für Boden
+                    if(coinCollision.length === 0)
+                    {
+                        coin.translateY(-0.05);
+                    }
+                    else
+                    {
+                        coinDropped = true;
+                    }
+                }
             }
 //---------------------------------------------------------------------------------------------------
             function collisionDetection()
@@ -494,7 +587,7 @@
                     jumpReady = false;
                 }
             }
-
+//---------------------------------------------------------------------------------------------------
             function healthStatus(status)
             {
 
