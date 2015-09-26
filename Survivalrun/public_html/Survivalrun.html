@@ -43,7 +43,7 @@
                     
                     //Sword
                     var sword;
-                    var weaponDirection; // Bow Sword
+                    var weaponDirection,weaponDirectionX; // Bow Sword
                     //Bow
                     var bow;
                     var arrow=[],arrowAirTime=[],arrowDirectionX;
@@ -394,10 +394,12 @@
                         animationSword.loop=false;
                         animationSwordPlaying=true;
                         weaponDirection=+1;
+                        weaponDirectionX=+3;
                         if(!playerLookDirection)
                         {
                             sword.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
                             weaponDirection=-1;
+                            weaponDirectionX=-3;
                         }
                         });
                     }
@@ -418,9 +420,11 @@
                         animationBow.play();
                         animationBow.loop=false;
                         animationBowPlaying=true;
+                        weaponDirectionX=+3;
                         if(!playerLookDirection)
                         {
                             bow.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                            weaponDirectionX=-3;
                         }
                         });
                         var arrowTex = new THREE.ImageUtils.loadTexture( 'Models/Player/arrow.png' );
@@ -731,7 +735,6 @@
                     function spawnRndItem(x,y)
                     {
                         var rnd=Math.floor((Math.random() * 100) + 1);
-                        console.log("rnd"+rnd);
                         if(rnd <= 20) //Heartdrop 20%
                         {
                             addHeartDrop(x,y+3);
@@ -934,7 +937,7 @@
                             player.position.y=oldy;
                             console.log("asd");
                             jumpReady=false;
-                        }w
+                        }
                         if(ray1.intersectObjects(colliderEnemy).length > 0)
                         {
                             if(!playerIsInvincible)
@@ -1043,19 +1046,9 @@
                     }
                     function weaponControls()
                     {
-                        var weaponValueX=3;
-                        if(playerLookDirection)
-                        {
-                            weaponValueX=3;
-                        }
-                        else
-                        {
-                            weaponValueX=-3;
-
-                        }
                         if(animationSwordPlaying)
                         {
-                            sword.position.x=player.position.x+weaponValueX;
+                            sword.position.x=player.position.x+weaponDirectionX;
                             sword.position.y=player.position.y;
                             if(!animationSword.isPlaying)
                             {
@@ -1065,7 +1058,7 @@
                         }
                         if(animationBowPlaying)
                         {
-                            bow.position.x=player.position.x+weaponValueX;
+                            bow.position.x=player.position.x+weaponDirectionX;
                             bow.position.y=player.position.y;
                             if(!animationBow.isPlaying)
                             {
