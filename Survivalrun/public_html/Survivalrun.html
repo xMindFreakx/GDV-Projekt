@@ -34,7 +34,8 @@
 		<script>
                     //Variables
                     //Player
-                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,playerArrowAmmo,playerLookDirection;
+                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,playerArrowAmmo;
+                    var playerLookDirection;
                     var playerHealth,playerMaxHealth;
                     var playerIsInvincible;
                     var playerMoveSpeed,fallSpeed,playerDirection;  //playerdir work needed
@@ -42,10 +43,10 @@
                     
                     //Sword
                     var sword;
-                    
+                    var weaponDirection; // Bow Sword
                     //Bow
                     var bow;
-                    var arrow=[],arrowAirTime=[];
+                    var arrow=[],arrowAirTime=[],arrowDirectionX;
                     var arrowSpeed;
                     
                     var sawSpeed;
@@ -58,6 +59,7 @@
                     
                     //Enemy
                     var enemy=[];
+                    var enemyAnimation=[];
                     var enemyMovementSpeed;
                     var enemyFallSpeed;
                     var enemySpotRange;
@@ -120,11 +122,11 @@
                             {
                                 if(e.keyCode==32 && !animationSwordPlaying && !animationBowPlaying)
                                 {
-                                    playerSwordAttack(player.position.x,player.position.y);
+                                    playerSwordAttack();
                                 }
                                 if(e.keyCode==67 && !animationBowPlaying && !animationSwordPlaying && playerArrowAmmo>0)
                                 {
-                                    playerBowAttack(player.position.x,player.position.y);
+                                    playerBowAttack();
                                 }
                                 if(e.keyCode==67 && playerArrowAmmo<=0)
                                 {
@@ -293,7 +295,6 @@
                         menuScene=false;
                         rayGround=[false,false,false];
                         highscoreValue=0;
-                        playerLookDirection=true;
                         
                         //Playersettings
                         playerMoveSpeed=0.6;
@@ -305,6 +306,7 @@
                         playerInvincibleDuration=1;
                         playerArrowAmmo=2;
                         arrowSpeed=playerMoveSpeed*2;
+                        playerLookDirection=true;
                         
                         //Enemy
                         enemyMovementSpeed=0.45;
@@ -371,8 +373,6 @@
                         scene.add( player );
                         playerAnimation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         colliderPlayer=[player];
-                        console.log("x"+player.position.x+"###y"+player.position.y+"####z"+player.position.z);
-//                        player.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
                         }); 
                        
                     }
@@ -388,12 +388,17 @@
                         sword.position.x = player.position.x;
                         sword.scale.set(5,5,5);
                         sword.castShadow =true;
-                        sword.receiveShadow =true;
                         scene.add( sword );
                         animationSword = new THREE.Animation( sword, sword.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         animationSword.play();
                         animationSword.loop=false;
                         animationSwordPlaying=true;
+                        weaponDirection=+1;
+                        if(!playerLookDirection)
+                        {
+                            sword.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                            weaponDirection=-1;
+                        }
                         });
                     }
                     function playerBowAttack()
@@ -408,12 +413,15 @@
                         bow.position.x = player.position.x;
                         bow.scale.set(5,5,5);
                         bow.castShadow =true;
-                        bow.receiveShadow =true;
                         scene.add( bow );
                         animationBow = new THREE.Animation( bow, bow.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         animationBow.play();
                         animationBow.loop=false;
                         animationBowPlaying=true;
+                        if(!playerLookDirection)
+                        {
+                            bow.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                        }
                         });
                         var arrowTex = new THREE.ImageUtils.loadTexture( 'Models/Player/arrow.png' );
                         arrowTex.minFilter = THREE.NearestFilter;
@@ -427,16 +435,21 @@
                         scene.add( arrow[arrow.length-1]);
                         removeArrowHTML();
                         arrowAirTime.push(localSeconds+2);
-//                        arrowCollision(arrow);
+                        weaponDirection=+1;
+                        arrowDirectionX=+6;
+                        if(!playerLookDirection)
+                        {
+                            arrow[arrow.length-1].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                            weaponDirection=-1;
+                            arrowDirectionX=-6;
+                        }
                         });
                     }
                     function arrowCollision()
                     {
-
                         for(var i=0;i<arrow.length;i++)
                         {
-                            
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+6, arrow[i].position.y+9,-0.3),new THREE.Vector3(1,0,0),0,2); //right
+                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,0),new THREE.Vector3(weaponDirection,0,0),0,2); //right
                             if(ray1.intersectObjects(colliderWorld).length <= 0) 
                             {
                                 arrow[i].translateX(arrowSpeed);
@@ -445,7 +458,7 @@
                             {
                                  scene.remove(arrow[i]);
                             }
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+7, arrow[i].position.y+9,-0.3),new THREE.Vector3(1,0,0),0,2); //right
+                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,-0.3),new THREE.Vector3(weaponDirection,0,0),0,2); //right
                             var arrowHitEnemy = ray2.intersectObjects(colliderEnemy);
                             if(arrowHitEnemy.length > 0) 
                             {
@@ -458,7 +471,7 @@
                     {
                             if(animationSwordPlaying)
                             {
-                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+10,0),new THREE.Vector3(1,0,0),0,8); //right
+                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+10,0),new THREE.Vector3(weaponDirection,0,0),0,8); //right
                                 var swordHitEnemy = ray1.intersectObjects(colliderEnemy);
                                 if(swordHitEnemy.length > 0) 
                                 {
@@ -498,10 +511,21 @@
                         scene.remove(obj);
                         });
                     }
-                    //adds a random enemy in to scene  // rnd missing
                     function addAI(x,y) 
                     {
-                        objLoader.load( "Models/Enemies/zombie.json", function( geometry,materials ) {
+                        var rnd=Math.floor((Math.random() * 10) + 1);
+                        var creeper="creeper";
+                        var zombie="zombie";
+                        var enemyTyp;
+                        if(rnd <5)
+                        {
+                            enemyTyp=creeper
+                        }
+                        else
+                        {
+                            enemyTyp=zombie
+                        }
+                        objLoader.load( "Models/Enemies/"+enemyTyp+".json", function( geometry,materials ) {
                               for ( var k in materials ) 
                               {
                                    materials[k].skinning = true;
@@ -509,13 +533,13 @@
                         enemy.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
                         enemy[enemy.length-1].position.x = x;
                         enemy[enemy.length-1].position.y = y;
-//                        enemy[enemy.length-1].scale.set(5,5,5);
+                        enemy[enemy.length-1].scale.set(5,5,5);
                         enemy[enemy.length-1].castShadow =true;
                         enemy[enemy.length-1].receiveShadow =true;
 //                        enemy[enemy.length-1].name="Enemy";
                         scene.add( enemy[enemy.length-1]);
                         colliderEnemy.push(enemy[enemy.length-1]);
-                        
+                        enemyAnimation.push( new THREE.Animation( enemy[enemy.length-1], enemy[enemy.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
                         });
                     }
                     function addCoinDrop(x,y)
@@ -639,6 +663,10 @@
                             if((ray2.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
                             {
                                 enemy[i].translateX(-enemyMovementSpeed);
+                                if( !enemyAnimation[enemy.length-1].isPlaying)
+                                {
+                                    enemyAnimation[enemy.length-1].play(enemy[enemy.length-1].currentTime);
+                                }
                             }
                             //right //rightdown
                             ray2 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(1,0,0),4.5,enemySpotRange);
@@ -647,6 +675,10 @@
                             if((ray2.intersectObjects(colliderPlayer).length>0 || ray5.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
                             {
                                 enemy[i].translateX(enemyMovementSpeed);
+                                if( !enemyAnimation[enemy.length-1].isPlaying)
+                                {
+                                    enemyAnimation[enemy.length-1].play(enemy[enemy.length-1].currentTime);
+                                }
                             }
                             //down
                             ray4 = new THREE.Raycaster(rayEnemy[1], new THREE.Vector3(0,-1,0),0,1.5);
@@ -698,7 +730,7 @@
                     }
                     function spawnRndItem(x,y)
                     {
-                        var rnd=Math.floor((Math.random() * 100) + 1);;
+                        var rnd=Math.floor((Math.random() * 100) + 1);
                         console.log("rnd"+rnd);
                         if(rnd <= 20) //Heartdrop 20%
                         {
@@ -812,6 +844,7 @@
                         var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
                         skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
                         scene.add( skyBox );
+                        addAI(50,20);                        
                         //Time
                         startLocalTime();
                     }
@@ -971,11 +1004,22 @@
                              if(controls.left==true)
                              {
                                 oldx=player.position.x;
-                                player.translateX( -playerMoveSpeed );
+//                                playerLookDirection="-";
+                                if(playerLookDirection)
+                                {
+                                     player.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                                     playerLookDirection=false;
+                                }
+                                player.translateX( playerMoveSpeed );
                              }
                              if(controls.right==true)
                              {
                                 oldx=player.position.x;
+                                if(!playerLookDirection)
+                                {
+                                     player.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                                     playerLookDirection=true;
+                                }
                                 player.translateX( playerMoveSpeed );
                              }
                              if(controls.up==true)
@@ -993,26 +1037,36 @@
                     }
                     function weaponControls()
                     {
-                            if(animationSwordPlaying)
+                        var weaponValueX=3;
+                        if(playerLookDirection)
+                        {
+                            weaponValueX=3;
+                        }
+                        else
+                        {
+                            weaponValueX=-3;
+
+                        }
+                        if(animationSwordPlaying)
+                        {
+                            sword.position.x=player.position.x+weaponValueX;
+                            sword.position.y=player.position.y;
+                            if(!animationSword.isPlaying)
                             {
-                                sword.position.x=player.position.x;
-                                sword.position.y=player.position.y;
-                                if(!animationSword.isPlaying)
-                                {
-                                    scene.remove(sword);
-                                    animationSwordPlaying=false;
-                                }
+                                scene.remove(sword);
+                                animationSwordPlaying=false;
                             }
-                            if(animationBowPlaying)
+                        }
+                        if(animationBowPlaying)
+                        {
+                            bow.position.x=player.position.x+weaponValueX;
+                            bow.position.y=player.position.y;
+                            if(!animationBow.isPlaying)
                             {
-                                bow.position.x=player.position.x;
-                                bow.position.y=player.position.y;
-                                if(!animationBow.isPlaying)
-                                {
-                                    scene.remove(bow);
-                                    animationBowPlaying=false;
-                                }
+                                scene.remove(bow);
+                                animationBowPlaying=false;
                             }
+                        }
                     }
                     function playerMoveAnimation()
                     {
