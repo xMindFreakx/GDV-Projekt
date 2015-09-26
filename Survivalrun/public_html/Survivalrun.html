@@ -53,12 +53,13 @@
                     
                     //rays
                     var ray1,ray2,ray4,ray5;
-                    var colliderPlayer=[], colliderWorld=[],colliderEnemy=[],colliderObjects=[], jumpOnHead;
+                    var colliderPlayer=[], colliderWorld=[],colliderEnemy=[],colliderObjects=[];
                     var ray=[],rayEnemy=[];
                     var rayGround;
                     
                     //Enemy
                     var enemy=[];
+                    var enemyDirection=[];
                     var enemyAnimation=[];
                     var enemyMovementSpeed;
                     var enemyFallSpeed;
@@ -66,20 +67,20 @@
                     var EnemyHighscoreValue;
                     
                     //Coin
-                    var coin=[];
+                    var coin;
                     var coinFallSpeed;
-                    var coinAnimation=[];
+                    var coinAnimation;
                     var coinHighscoreValue;
                     
                     //HeartDrop
-                    var heartDrop=[];
+                    var heartDrop;
                     var heartDropDropFallSpeed;
-                    var heartDropAnimation=[];
+                    var heartDropAnimation;
                     
                     //Arrowdrop
-                    var arrowDrop=[];
-                    var arrowDropFallSpeed;
-                    var arrowDropAnimation=[];
+                    var arrowDrop;
+                    var arrowDropAnimation;
+                    
                     
                     var oldx,oldy;
                     var renderer, scene, camera;
@@ -306,7 +307,6 @@
                         playerInvincibleDuration=1;
                         playerArrowAmmo=2;
                         arrowSpeed=playerMoveSpeed*2;
-                        playerLookDirection=true;
                         
                         //Enemy
                         enemyMovementSpeed=0.45;
@@ -318,10 +318,11 @@
                         coinFallSpeed=0.35;
                         coinHighscoreValue=120;
                         
-                        //Arrowdrop
-                        arrowDropFallSpeed=0.35;
+                        //DropCount
+                        coinDropCount=0;
+                        colliderObjectCount=-1;
                         
-                        //Coin
+                        //Heart
                         heartDropFallSpeed=0.35;
                         
                         highscoreEverySecondsAmount=10;
@@ -352,7 +353,7 @@
                         //Preload Texture
                         preLoadWeapons();
                         //World 1
-                        createPlayer(8,20.5); //8
+                        createPlayer(0,20.5); //8
 //                        createMenu();
                        createWorld1();
                        animate();
@@ -373,6 +374,7 @@
                         scene.add( player );
                         playerAnimation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         colliderPlayer=[player];
+                        playerLookDirection=true;
                         }); 
                        
                     }
@@ -437,6 +439,7 @@
                         arrow[arrow.length-1].position.y = player.position.y;
                         arrow[arrow.length-1].position.x = player.position.x;
                         scene.add( arrow[arrow.length-1]);
+
                         removeArrowHTML();
                         arrowAirTime.push(localSeconds+2);
                         weaponDirection=+1;
@@ -453,21 +456,22 @@
                     {
                         for(var i=0;i<arrow.length;i++)
                         {
+                            ;
                             ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,0),new THREE.Vector3(weaponDirection,0,0),0,2); //right
+                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,-0.3),new THREE.Vector3(weaponDirection,0,0),0,2); 
                             if(ray1.intersectObjects(colliderWorld).length <= 0) 
                             {
                                 arrow[i].translateX(arrowSpeed);
                             }
+                           if(ray2.intersectObjects(colliderEnemy).length > 0) 
+                            {
+                                destroyEnemy(ray2.intersectObjects(colliderEnemy).object);
+                            }
                             if(localSeconds > arrowAirTime[i])
                             {
-                                 scene.remove(arrow[i]);
-                            }
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,-0.3),new THREE.Vector3(weaponDirection,0,0),0,2); //right
-                            var arrowHitEnemy = ray2.intersectObjects(colliderEnemy);
-                            if(arrowHitEnemy.length > 0) 
-                            {
-                                scene.remove(arrow[i]);
-                                destroyEnemy(arrowHitEnemy[0].object);
+                                    scene.remove(arrow[i]);
+                                    arrow.splice(i, 1);
+                                    arrowAirTime.splice(i, 1);
                             }
                         }
                     }
@@ -540,9 +544,11 @@
                         enemy[enemy.length-1].scale.set(5,5,5);
                         enemy[enemy.length-1].castShadow =true;
                         enemy[enemy.length-1].receiveShadow =true;
-//                        enemy[enemy.length-1].name="Enemy";
+                        enemy[enemy.length-1].name=enemyTyp;
+                        enemyDirection.push(false);
                         scene.add( enemy[enemy.length-1]);
                         colliderEnemy.push(enemy[enemy.length-1]);
+                        colliderWorld.push(enemy[enemy.length-1]);
                         enemyAnimation.push( new THREE.Animation( enemy[enemy.length-1], enemy[enemy.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
                         });
                     }
@@ -553,16 +559,16 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        coin.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        coin[coin.length-1].position.x = x;
-                        coin[coin.length-1].position.y = y;
-                        coin[coin.length-1].castShadow =true;
-                        scene.add(coin[coin.length-1]);
-                        colliderObjects.push(coin[coin.length-1]);
-                        coinAnimation.push( new THREE.Animation( coin[coin.length-1], coin[coin.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
-                        coinAnimation[coinAnimation.length-1].play();
+                        coin =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        coin.position.x = x;
+                        coin.position.y = y;
+                        coin.castShadow =true;
+                        coin.name ="coin";
+                        scene.add(coin);
+                        colliderObjects.push(coin);
+                        coinAnimation= new THREE.Animation( coin, coin.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                        coinAnimation.play();
                         });
-                        
                     }
                     function addArrowDrop(x,y)
                     {
@@ -571,16 +577,16 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        arrowDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        arrowDrop[arrowDrop.length-1].position.x = x;
-                        arrowDrop[arrowDrop.length-1].position.y = y;
-                        arrowDrop[arrowDrop.length-1].castShadow =true;
-                        scene.add(arrowDrop[arrowDrop.length-1]);
-                        colliderObjects.push(arrowDrop[arrowDrop.length-1]);
-                        arrowDropAnimation.push( new THREE.Animation( arrowDrop[arrowDrop.length-1], arrowDrop[arrowDrop.length-1].geometry.animations[1], THREE.AnimationHandler.CATMULLROM));
-                        arrowDropAnimation[arrowDrop.length-1].play();
+                        arrowDrop =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        arrowDrop.position.x = x;
+                        arrowDrop.position.y = y;
+                        arrowDrop.castShadow =true;
+                        arrowDrop.name ="arrowDrop";
+                        scene.add(arrowDrop);
+                        colliderObjects.push(arrowDrop);
+                        arrowDropAnimation= new THREE.Animation( arrowDrop,arrowDrop.geometry.animations[3], THREE.AnimationHandler.CATMULLROM);
+                        arrowDropAnimation.play();
                         });
-                        
                     }
                     function addHeartDrop(x,y)
                     {
@@ -589,148 +595,105 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        heartDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        heartDrop[heartDrop.length-1].position.x = x;
-                        heartDrop[heartDrop.length-1].position.y = y;
-                        heartDrop[heartDrop.length-1].castShadow =true;
-                        scene.add(heartDrop[heartDrop.length-1]);
-                        colliderObjects.push(heartDrop[heartDrop.length-1]);
-                        heartDropAnimation.push(new THREE.Animation( heartDrop[heartDrop.length-1], heartDrop[heartDrop.length-1].geometry.animations[1], THREE.AnimationHandler.CATMULLROM));
-                        heartDropAnimation[heartDrop.length-1].play();
+                        heartDrop =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                        heartDrop.position.x = x;
+                        heartDrop.position.y = y;
+                        heartDrop.castShadow =true;
+                        heartDrop.name ="heart";
+                        scene.add(heartDrop);
+                        colliderObjects.push(heartDrop);
+                        heartDropAnimation = new THREE.Animation( heartDrop, heartDrop.geometry.animations[1], THREE.AnimationHandler.CATMULLROM);
+                        heartDropAnimation.play();
                         });
                         
-                    }
-                    function objectCollision()
-                    {
-                        //coin
-                        for(var i=0;i<coin.length;i++)
-                        {
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(1,0,0),0,2); //right
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(-1,0,0),0,2); //left
-                            ray3 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(0,1,0),0,2); //up
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(0,-1,0),0,7); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                coin[i].translateY(-coinFallSpeed);
-                            }
-                            if(ray1.intersectObjects(colliderPlayer).length>0 || ray2.intersectObjects(colliderPlayer).length>0 || ray3.intersectObjects(colliderPlayer).length>0)
-                            {
-                                destroyCoin(coin[i]);
-                            }
-                        }
-                        //arrowDrop
-                        for(var i=0;i<arrowDrop.length;i++)
-                        {
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y+7,0),new THREE.Vector3(1,0,0),0,2); //right
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y+7,0),new THREE.Vector3(-1,0,0),0,2); //left
-                            ray3 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y+7,0),new THREE.Vector3(0,1,0),0,2); //up
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y,0),new THREE.Vector3(0,-1,0),0,3); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                arrowDrop[i].translateY(-arrowDropFallSpeed);
-                            }
-                            if(ray1.intersectObjects(colliderPlayer).length>0 || ray2.intersectObjects(colliderPlayer).length>0 || ray3.intersectObjects(colliderPlayer).length>0)
-                            {
-                                destroyArrowDrop(arrowDrop[i]);
-                            }
-                        }
-                        //heartDrop
-                        for(var i=0;i<heartDrop.length;i++)
-                        {
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y+7,0),new THREE.Vector3(1,0,0),0,2); //right
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y+7,0),new THREE.Vector3(-1,0,0),0,2); //left
-                            ray3 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y+7,0),new THREE.Vector3(0,1,0),0,2); //up
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y,0),new THREE.Vector3(0,-1,0),0,0.7); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                heartDrop[i].translateY(-heartDropFallSpeed);
-                            }
-                            if(ray1.intersectObjects(colliderPlayer).length>0 || ray2.intersectObjects(colliderPlayer).length>0 || ray3.intersectObjects(colliderPlayer).length>0)
-                            {
-                                destroyHeartDrop(heartDrop[i]);
-                            }
-                        }
                     }
                     function enemyAI()
                     {
                         for(var i=0;i<enemy.length;i++)
                         {
-                             rayEnemy = [
-                                new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), //mid left/right
-                                new THREE.Vector3(enemy[i].position.x-1.4, enemy[i].position.y+1, 0), //down left
-                                new THREE.Vector3(enemy[i].position.x+1.4, enemy[i].position.y+1, 0) //down right
-                              ];
                             //left //leftdown
-                            ray2 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(-1,0,0),4.5,enemySpotRange);
-                            ray4 = new THREE.Raycaster(rayEnemy[1], new THREE.Vector3(-1,-0.5,0),1,enemySpotRange+2);
-                            ray1 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(-1,0,0),0,2.5);
-                            if((ray2.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
+                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(-1,0,0),4.5,enemySpotRange);
+                            ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(-1,-0.5,0),1,enemySpotRange+2);
+                            ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(-1,0,0),0,2.5);
+                            if((ray1.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray2.intersectObjects(colliderWorld).length <= 0)
                             {
                                 enemy[i].translateX(-enemyMovementSpeed);
-                                if( !enemyAnimation[enemy.length-1].isPlaying)
+                                if( !enemyAnimation[i].isPlaying)
                                 {
-                                    enemyAnimation[enemy.length-1].play(enemy[enemy.length-1].currentTime);
+                                    enemyAnimation[i].play(enemy[i].currentTime);
                                 }
                             }
                             //right //rightdown
-                            ray2 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(1,0,0),4.5,enemySpotRange);
-                            ray5 = new THREE.Raycaster(rayEnemy[2], new THREE.Vector3(1,-0.5,0),1,enemySpotRange+2);
-                            ray1 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(1,0,0),0,2.5);
-                            if((ray2.intersectObjects(colliderPlayer).length>0 || ray5.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
+                            ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(1,0,0),4.5,enemySpotRange);
+                            ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(1,-0.5,0),1,enemySpotRange+2);
+                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(1,0,0),0,2.5);
+                            if((ray2.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
                             {
-                                enemy[i].translateX(enemyMovementSpeed);
-                                if( !enemyAnimation[enemy.length-1].isPlaying)
+                                enemy[i].translateX(-enemyMovementSpeed);
+                                if( !enemyAnimation[i].isPlaying)
                                 {
-                                    enemyAnimation[enemy.length-1].play(enemy[enemy.length-1].currentTime);
+                                    enemyAnimation[i].play(enemy[i].currentTime);
                                 }
                             }
                             //down
-                            ray4 = new THREE.Raycaster(rayEnemy[1], new THREE.Vector3(0,-1,0),0,1.5);
-                            ray5 = new THREE.Raycaster(rayEnemy[2], new THREE.Vector3(0,-1,0),0,1.5);
-                            ray2 = new THREE.Raycaster(rayEnemy[0], new THREE.Vector3(1,0,0),0,2.5);
+                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(0,-1,0),0,1.5);
                             //FALL
-                            if(ray4.intersectObjects(colliderWorld).length <=0 && ray5.intersectObjects(colliderWorld).length <= 0)
+                            if(ray1.intersectObjects(colliderWorld).length <=0 )
                             {
                                 enemy[i].translateY(-enemyFallSpeed);
                             }
+                            //rotate 180
+                            if(player.position.x >= enemy[i].position.x && !enemyDirection[i])
+                            {
+                                enemyDirection[i]=true;
+                                enemy[i].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                            }
+                            if(player.position.x <= enemy[i].position.x && enemyDirection[i])
+                            {
+                                enemyDirection[i]=false;
+                                enemy[i].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
+                            }
                         }
                     }
-                    function destroyEnemy(enemy)
+                    function destroyEnemy(enemyScene)
                     {
-                        if(colliderEnemy.indexOf(enemy) > -1)
+                        if(colliderEnemy.indexOf(enemyScene)!=-1)
                         {
-                            colliderEnemy.splice(colliderEnemy.indexOf(enemy), 1);
+                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                            enemy.splice(enemy.indexOf(enemyScene), 1);
                             addHighscoreValue(EnemyHighscoreValue);
-                            spawnRndItem(enemy.position.x,enemy.position.y);
-                            scene.remove(enemy);
+                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
+                            scene.remove(enemyScene);
                         }
                     }
-                    function destroyCoin(coin)
+                    function destroyCoin(coinScene)
                     {
-                        if(colliderObjects.indexOf(coin) > -1)
+                        if(colliderObjects.indexOf(coinScene)!=-1)
                         {
-                            colliderObjects.splice(colliderObjects.indexOf(coin), 1);
+                            colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
                             addHighscoreValue(coinHighscoreValue);
-                            scene.remove(coin);
+                            scene.remove(coinScene);
                         }
                     }
-                    function destroyArrowDrop(arrow)
+                    function destroyArrowDrop(arrowScene)
                     {
-                        if(colliderObjects.indexOf(arrow) > -1)
+                        if(colliderObjects.indexOf(arrowScene)!=-1)
                         {
-                            colliderObjects.splice(colliderObjects.indexOf(arrow), 1);
-                            scene.remove(arrow);
+                            colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
+                            scene.remove(arrowScene);
                             addArrowHTML();
                         }
                     }
-                    function destroyHeartDrop(heart)
+                    function destroyHeartDrop(heartScene)
                     {
-                        if(colliderObjects.indexOf(heart) > -1)
+                        if(colliderObjects.indexOf(heartScene)!=-1)
                         {
-                            colliderObjects.splice(colliderObjects.indexOf(heart), 1);
-                            scene.remove(heart);
+                            colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
+                            scene.remove(heartScene);
                             addHeartHTML();
                         }
+
                     }
                     function spawnRndItem(x,y)
                     {
@@ -847,7 +810,17 @@
                         var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
                         skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
                         scene.add( skyBox );
-                        addAI(10,50);                        
+                        addAI(30,50);                        
+//                        addAI(20,50);                        
+//                        addAI(30,50);    
+//                        addArrowDrop(5,10);                    
+//                        addArrowDrop(25,10);                    
+//                        addArrowDrop(15,10);  
+//                        addCoinDrop(5,10);
+//                        addAI(10,30);              
+//                        addAI(15,30);              
+//                        addAI(20,30);              
+//                        addAI(25,30);              
                         //Time
                         startLocalTime();
                     }
@@ -873,12 +846,12 @@
                     {
                        oldy=player.position.y;
                          ray = [
-                            new THREE.Vector3(player.position.x, player.position.y+1,0), //right left bottom
-                            new THREE.Vector3(player.position.x, player.position.y+6.50, 0), //right left mid
-                            new THREE.Vector3(player.position.x, player.position.y+11.50, 0),  //right left Upper
-                            new THREE.Vector3(player.position.x-1.8, player.position.y+2, 0),//up down
-                            new THREE.Vector3(player.position.x, player.position.y+2, 0),//up down
-                            new THREE.Vector3(player.position.x+1.8, player.position.y+2, 0)//up down
+                            new THREE.Vector3(player.position.x, player.position.y+1,0), //right left bottom0
+                            new THREE.Vector3(player.position.x, player.position.y+6.50, 0), //right left mid1
+                            new THREE.Vector3(player.position.x, player.position.y+11.50, 0),  //right left Upper2
+                            new THREE.Vector3(player.position.x-1.8, player.position.y+2, 0),//up down 1.83
+                            new THREE.Vector3(player.position.x, player.position.y+2, 0),//up down 1.83
+                            new THREE.Vector3(player.position.x+1.8, player.position.y+2, 0)//up down4
                           ];
                         //Right
                         for(var i=0;i < 3; i++)
@@ -889,6 +862,10 @@
                             {
                                 player.position.x=oldx;
                             }
+//                             if(ray1.intersectObjects(colliderObjects).length>0)
+//                            {
+//                                destroyCoin(ray1.intersectObjects(colliderObjects)[0].object);
+//                            }
                             if(ray2.intersectObjects(colliderEnemy).length > 0)
                             {
                                 if(!playerIsInvincible)
@@ -910,9 +887,25 @@
                         {
                             ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,1.75);
                             ray2 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,5);
+                            var item = ray1.intersectObjects(colliderObjects);
                             if(ray1.intersectObjects(colliderWorld).length > 0 )
                             {
                                 player.position.x=oldx;
+                            }
+                            if(item.length>0)
+                            {
+                                if(item[0].object.name=="coin")
+                                {
+                                    destroyCoin(item[0].object);
+                                }
+                                if(item[0].object.name=="arrowDrop")
+                                {
+                                    destroyArrowDrop(item[0].object);
+                                }
+                                if(item[0].object.name=="heart")
+                                {
+                                    destroyHeartDrop(item[0].object);
+                                }
                             }
                             if(ray2.intersectObjects(colliderEnemy).length > 0)
                             {
@@ -930,12 +923,10 @@
                             }
                         }
                         
-                            
+                        //UP   
                         ray1 = new THREE.Raycaster(new THREE.Vector3( player.position.x, player.position.y+13.5, 0),new THREE.Vector3(0,1,0),0,2);
                         if(ray1.intersectObjects(colliderWorld).length > 0 )
                         {
-                            player.position.y=oldy;
-                            console.log("asd");
                             jumpReady=false;
                         }
                         if(ray1.intersectObjects(colliderEnemy).length > 0)
@@ -952,25 +943,17 @@
                                 }
                             }
                         }
-//                                                    var dir = new THREE.Vector3( 0, 1, 0 );
-//var origin = new THREE.Vector3( player.position.x, player.position.y+13.5, 0);
-//var length = 2;
-//var hex = 0xffff00;
-//
-//var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
-//scene.add( arrowHelper );
-                        
                         //Down
-                        for(var i=4;i < 6; i++)
+                        for(var i=3;i < 6; i++)
                         {
-                            ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,2);
+                            ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,2.3);
                             if(ray1.intersectObjects(colliderWorld).length > 0 )
                             {
-                                rayGround[i-4]=true;
+                                rayGround[i-3]=true;
                             }
                             else
                             {
-                                rayGround[i-4]=false;
+                                rayGround[i-3]=false;
                             }
                         }
                         if(rayGround[0] || rayGround[1] || rayGround[2])
@@ -983,11 +966,10 @@
                                 player.translateY( -fallSpeed );
                         }
                         //Kill enemy raycast
-                        ray2 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.3,12.5);
-                        jumpOnHead= ray2.intersectObjects(colliderEnemy);
-                        if(jumpOnHead.length>0)
+                        ray2 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.2,12.75);
+                        if(ray2.intersectObjects(colliderEnemy).length>0)
                         {
-                            destroyEnemy(jumpOnHead[0].object);
+                            destroyEnemy(ray2.intersectObjects(colliderEnemy)[0].object);
                         }
                     }
                     function playerControls()
@@ -1092,7 +1074,6 @@
                             if(!escMenu)
                             {
                                 playerCollision();
-                                objectCollision();
                                 arrowCollision();
                                 swordCollision();
                                 world1Events();
