@@ -38,8 +38,9 @@
                     var playerLookDirection;
                     var playerHealth,playerMaxHealth;
                     var playerIsInvincible;
-                    var playerMoveSpeed,fallSpeed,playerDirection;  //playerdir work needed
+                    var playerMoveSpeed,fallSpeed,playerDirection;
                     var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying,animationLoaded;
+                    var playerAlive;
                     
                     //Sword
                     var sword;
@@ -49,11 +50,9 @@
                     var arrow=[],arrowAirTime=[],arrowDirectionX;
                     var arrowSpeed;
                     
-                    var sawSpeed;
-                    
                     //rays
                     var ray1,ray2,ray4,ray5;
-                    var colliderPlayer=[], colliderWorld=[],colliderEnemy=[],colliderObjects=[];
+                    var colliderPlayer=[], colliderWorld=[],colliderEnemy=[],colliderObjects=[],colliderSaw=[];
                     var ray=[],rayEnemy=[];
                     var rayGround;
                     
@@ -61,26 +60,39 @@
                     var enemy=[];
                     var enemyDirection=[];
                     var enemyAnimation=[];
+                    var enemyHealth=[];
+                    var enemyInvincible=[];
+                    var enemyInvincibleTime;
                     var enemyMovementSpeed;
                     var enemyFallSpeed;
                     var enemySpotRange;
                     var EnemyHighscoreValue;
+                    var creeperHealth;
+                    var zombieHeatlh;
+                   
                     
                     //Coin
-                    var coin;
+                    var coin=[];
                     var coinFallSpeed;
                     var coinAnimation;
                     var coinHighscoreValue;
                     
                     //HeartDrop
-                    var heartDrop;
+                    var heartDrop=[];
                     var heartDropDropFallSpeed;
                     var heartDropAnimation;
                     
                     //Arrowdrop
-                    var arrowDrop;
+                    var arrowDrop=[];
                     var arrowDropAnimation;
                     
+                    //World
+                    var worldOffsetX;
+                    var world=[];
+                    var sawSpeed;
+                    var rndBiome,rndBiomeSize;
+                    var rndBiomeType;
+                    var sunLight;
                     
                     var oldx,oldy;
                     var renderer, scene, camera;
@@ -88,7 +100,7 @@
                     var controls;
                     var objLoader;
                     
-                    var sawcollider=[];
+                    
                     var menuScene;
                     var skyBox;
                     var escMenu;
@@ -103,18 +115,22 @@
                     //ESC-Pause
                      $(document).keyup(function (e) {
                             if(e.which == 27) {
-                                 if(!escMenu)
-                                 {
-                                    escMenu=true;
-                                    document.getElementById("pausetext").innerHTML="~ Pause ~";
-                                    stopLocalTime();
-                                 }
-                                 else
-                                 {
-                                    escMenu=false;
-                                    document.getElementById("pausetext").innerHTML="";
-                                    startLocalTime();
-                                 }
+                                if(playerAlive)
+                                {
+                                    if(!escMenu )
+                                    {
+                                          escMenu=true;
+                                          document.getElementById("pausetext").innerHTML="~ Pause ~";
+                                          stopLocalTime();
+                                    }
+                                    else
+                                    {
+                                       escMenu=false;
+                                       document.getElementById("pausetext").innerHTML="";
+                                       startLocalTime();
+                                    }
+                                }
+
                              }
                          });
                          //Weapons
@@ -202,6 +218,21 @@
                            //deathscreen
                        }
                        playerHealth--;
+                    }
+                    function deathScreen()
+                    {
+//                        playerAlive=false;
+//                        escMenu=true;
+                        playerHealth=1;
+                       $("#heart1").hide();
+                       $("#heart2").hide();
+                       $("#heart3").hide();
+                       $("#heart4").hide();
+                       $("#heart5").hide();
+                       
+                       document.getElementById("pausetext").innerHTML="~ Death ~";
+                       stopLocalTime();
+                       
                     }
                     function addHeartHTML()
                     {
@@ -297,6 +328,11 @@
                         rayGround=[false,false,false];
                         highscoreValue=0;
                         
+                        //world
+                        worldOffsetX=-120;
+                        rndBiomeSize=-1;
+                        sawSpeed=0.35;
+                        
                         //Playersettings
                         playerMoveSpeed=0.6;
                         sawSpeed=0.4;
@@ -307,12 +343,16 @@
                         playerInvincibleDuration=1;
                         playerArrowAmmo=2;
                         arrowSpeed=playerMoveSpeed*2;
+                        playerAlive=true;
                         
                         //Enemy
                         enemyMovementSpeed=0.45;
                         enemyFallSpeed=0.7;
                         enemySpotRange=25;
                         EnemyHighscoreValue=250;
+                        zombieHeatlh=2;
+                        creeperHealth=3;
+                        enemyInvincibleTime=0.9;
                         
                         //Coin
                         coinFallSpeed=0.35;
@@ -325,6 +365,8 @@
                         //Heart
                         heartDropFallSpeed=0.35;
                         
+                        //arrow
+                        arrowDropFallSpeed=0.35;
                         highscoreEverySecondsAmount=10;
                         
                         scene = new THREE.Scene();
@@ -353,10 +395,10 @@
                         //Preload Texture
                         preLoadWeapons();
                         //World 1
-                        createPlayer(0,20.5); //8
 //                        createMenu();
-                       createWorld1();
-                       animate();
+//                       createWorld1();
+                        createRndWorld();
+                      
                     }
                     function createPlayer(x,y)
                     {
@@ -441,7 +483,7 @@
                         scene.add( arrow[arrow.length-1]);
 
                         removeArrowHTML();
-                        arrowAirTime.push(localSeconds+2);
+                        arrowAirTime.push(clock.getElapsedTime()+2);
                         weaponDirection=+1;
                         arrowDirectionX=+6;
                         if(!playerLookDirection)
@@ -456,18 +498,20 @@
                     {
                         for(var i=0;i<arrow.length;i++)
                         {
-                            ;
                             ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,0),new THREE.Vector3(weaponDirection,0,0),0,2); //right
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,-0.3),new THREE.Vector3(weaponDirection,0,0),0,2); 
                             if(ray1.intersectObjects(colliderWorld).length <= 0) 
                             {
                                 arrow[i].translateX(arrowSpeed);
                             }
-                           if(ray2.intersectObjects(colliderEnemy).length > 0) 
+                          else if(ray1.intersectObjects(colliderEnemy).length > 0) 
                             {
-                                destroyEnemy(ray2.intersectObjects(colliderEnemy).object);
+                                hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
+                                    scene.remove(arrow[i]);
+                                    arrow.splice(i, 1);
+                                    arrowAirTime.splice(i, 1);
+                                
                             }
-                            if(localSeconds > arrowAirTime[i])
+                          else if(localSeconds > arrowAirTime[i])
                             {
                                     scene.remove(arrow[i]);
                                     arrow.splice(i, 1);
@@ -479,11 +523,11 @@
                     {
                             if(animationSwordPlaying)
                             {
-                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+10,0),new THREE.Vector3(weaponDirection,0,0),0,8); //right
+                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+8,0),new THREE.Vector3(weaponDirection,0,0),0,10); //right
                                 var swordHitEnemy = ray1.intersectObjects(colliderEnemy);
                                 if(swordHitEnemy.length > 0) 
                                 {
-                                    destroyEnemy(swordHitEnemy[0].object);
+                                    hitEnemy(swordHitEnemy[0].object);
                                 }
                             }
                     }
@@ -527,11 +571,11 @@
                         var enemyTyp;
                         if(rnd <5)
                         {
-                            enemyTyp=creeper
+                            enemyTyp=creeper;
                         }
                         else
                         {
-                            enemyTyp=zombie
+                            enemyTyp=zombie;
                         }
                         objLoader.load( "Models/Enemies/"+enemyTyp+".json", function( geometry,materials ) {
                               for ( var k in materials ) 
@@ -547,6 +591,18 @@
                         enemy[enemy.length-1].name=enemyTyp;
                         enemyDirection.push(false);
                         scene.add( enemy[enemy.length-1]);
+                        
+                        //enemyhealth
+                        if(enemyTyp =="zombie")
+                        {
+                            enemyHealth.push(zombieHeatlh);
+                        }
+                        if(enemyTyp =="creeper")
+                        {
+                            enemyHealth.push(creeperHealth);
+                        }
+                        //enemyInvincible
+                        enemyInvincible.push(0);
                         colliderEnemy.push(enemy[enemy.length-1]);
                         colliderWorld.push(enemy[enemy.length-1]);
                         enemyAnimation.push( new THREE.Animation( enemy[enemy.length-1], enemy[enemy.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
@@ -559,14 +615,14 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        coin =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        coin.position.x = x;
-                        coin.position.y = y;
-                        coin.castShadow =true;
-                        coin.name ="coin";
-                        scene.add(coin);
-                        colliderObjects.push(coin);
-                        coinAnimation= new THREE.Animation( coin, coin.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                        coin.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                        coin[coin.length-1].position.x = x;
+                        coin[coin.length-1].position.y = y;
+                        coin[coin.length-1].castShadow =true;
+                        coin[coin.length-1].name ="coin";
+                        scene.add(coin[coin.length-1]);
+                        colliderObjects.push(coin[coin.length-1]);
+                        coinAnimation= new THREE.Animation( coin[coin.length-1], coin[coin.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
                         coinAnimation.play();
                         });
                     }
@@ -577,14 +633,14 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        arrowDrop =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        arrowDrop.position.x = x;
-                        arrowDrop.position.y = y;
-                        arrowDrop.castShadow =true;
-                        arrowDrop.name ="arrowDrop";
-                        scene.add(arrowDrop);
-                        colliderObjects.push(arrowDrop);
-                        arrowDropAnimation= new THREE.Animation( arrowDrop,arrowDrop.geometry.animations[3], THREE.AnimationHandler.CATMULLROM);
+                        arrowDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                        arrowDrop[arrowDrop.length-1].position.x = x;
+                        arrowDrop[arrowDrop.length-1].position.y = y;
+                        arrowDrop[arrowDrop.length-1].castShadow =true;
+                        arrowDrop[arrowDrop.length-1].name ="arrowDrop";
+                        scene.add(arrowDrop[arrowDrop.length-1]);
+                        colliderObjects.push(arrowDrop[arrowDrop.length-1]);
+                        arrowDropAnimation= new THREE.Animation( arrowDrop[arrowDrop.length-1],arrowDrop[arrowDrop.length-1].geometry.animations[3], THREE.AnimationHandler.CATMULLROM);
                         arrowDropAnimation.play();
                         });
                     }
@@ -595,14 +651,14 @@
                               {
                                    materials[k].skinning = true;
                               }
-                        heartDrop =new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        heartDrop.position.x = x;
-                        heartDrop.position.y = y;
-                        heartDrop.castShadow =true;
-                        heartDrop.name ="heart";
-                        scene.add(heartDrop);
-                        colliderObjects.push(heartDrop);
-                        heartDropAnimation = new THREE.Animation( heartDrop, heartDrop.geometry.animations[1], THREE.AnimationHandler.CATMULLROM);
+                        heartDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                        heartDrop[heartDrop.length-1].position.x = x;
+                        heartDrop[heartDrop.length-1].position.y = y;
+                        heartDrop[heartDrop.length-1].castShadow =true;
+                        heartDrop[heartDrop.length-1].name ="heart";
+                        scene.add(heartDrop[heartDrop.length-1]);
+                        colliderObjects.push(heartDrop[heartDrop.length-1]);
+                        heartDropAnimation = new THREE.Animation( heartDrop[heartDrop.length-1], heartDrop[heartDrop.length-1].geometry.animations[1], THREE.AnimationHandler.CATMULLROM);
                         heartDropAnimation.play();
                         });
                         
@@ -642,7 +698,7 @@
                             {
                                 enemy[i].translateY(-enemyFallSpeed);
                             }
-                            //rotate 180
+//                            //rotate 180
                             if(player.position.x >= enemy[i].position.x && !enemyDirection[i])
                             {
                                 enemyDirection[i]=true;
@@ -657,69 +713,140 @@
                     }
                     function destroyEnemy(enemyScene)
                     {
-                        if(colliderEnemy.indexOf(enemyScene)!=-1)
+                        if(colliderEnemy.indexOf(enemyScene)!==-1)
                         {
                             colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
                             colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                            enemyDirection.splice(enemyDirection.indexOf(enemyScene))
                             enemy.splice(enemy.indexOf(enemyScene), 1);
+                            enemyHealth.splice(enemyHealth.indexOf(enemyScene),1);
+                            enemyInvincible.splice(enemyInvincible.indexOf(enemyScene),1);
                             addHighscoreValue(EnemyHighscoreValue);
                             spawnRndItem(enemyScene.position.x,enemyScene.position.y);
                             scene.remove(enemyScene);
                         }
                     }
+                    function destroyEnemyFall(enemyScene)
+                    {
+                        if(colliderEnemy.indexOf(enemyScene)!==-1)
+                        {
+                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                            enemyDirection.splice(enemyDirection.indexOf(enemyScene))
+                            enemy.splice(enemy.indexOf(enemyScene), 1);
+                            enemyHealth.splice(enemyHealth.indexOf(enemyScene),1);
+                            enemyInvincible.splice(enemyInvincible.indexOf(enemyScene),1);
+                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
+                            scene.remove(enemyScene);
+                        }
+                    }
+                    function hitEnemy(enemyScene)
+                    {
+                        var index = colliderEnemy.indexOf(enemyScene);
+                        if(enemyHealth[index]<= 0)
+                        {
+                            destroyEnemy(enemyScene);
+                        }
+                        else
+                        {
+                            if(enemyInvincible[index] <= clock.getElapsedTime())
+                            {
+                                enemyInvincible[index] = clock.getElapsedTime()+enemyInvincibleTime;
+                                enemyHealth[index]--;
+                            }
+                        }
+                    }
                     function destroyCoin(coinScene)
                     {
-                        if(colliderObjects.indexOf(coinScene)!=-1)
+                        if(colliderObjects.indexOf(coinScene)!==-1)
                         {
                             colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
+                            coin.splice(coin.indexOf(coinScene), 1);
                             addHighscoreValue(coinHighscoreValue);
+                            scene.remove(coinScene);
+                        }
+                    }
+                    function destroyCoinFall(coinScene)
+                    {
+                        if(colliderObjects.indexOf(coinScene)!==-1)
+                        {
+                            colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
+                            coin.splice(coin.indexOf(coinScene), 1);
                             scene.remove(coinScene);
                         }
                     }
                     function destroyArrowDrop(arrowScene)
                     {
-                        if(colliderObjects.indexOf(arrowScene)!=-1)
+                        if(colliderObjects.indexOf(arrowScene)!==-1)
                         {
                             colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
+                            arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
                             scene.remove(arrowScene);
                             addArrowHTML();
                         }
                     }
+                    function destroyArrowDropFall(arrowScene)
+                    {
+                        if(colliderObjects.indexOf(arrowScene)!==-1)
+                        {
+                            colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
+                            arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
+                            scene.remove(arrowScene);
+                        }
+                    }
                     function destroyHeartDrop(heartScene)
                     {
-                        if(colliderObjects.indexOf(heartScene)!=-1)
+                        if(colliderObjects.indexOf(heartScene)!==-1)
                         {
                             colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
+                            heartDrop.splice(heartDrop.indexOf(heartScene),1);
                             scene.remove(heartScene);
                             addHeartHTML();
                         }
-
+                    }
+                    function destroyHeartDropFall(heartScene)
+                    {
+                        if(colliderObjects.indexOf(heartScene)!==-1)
+                        {
+                            colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
+                            heartDrop.splice(heartDrop.indexOf(heartScene),1);
+                            scene.remove(heartScene);
+                        }
+                    }
+                    function destroyRndWorld(worldScene)
+                    {
+                        (colliderWorld.indexOf(worldScene)!==-1)
+                        {
+                            colliderWorld.splice(colliderWorld.indexOf(worldScene), 1);
+                            scene.remove(worldScene);
+                            world.splice(world.indexOf(worldScene), 1);
+                        }
                     }
                     function spawnRndItem(x,y)
                     {
                         var rnd=Math.floor((Math.random() * 100) + 1);
                         if(rnd <= 20) //Heartdrop 20%
                         {
-                            addHeartDrop(x,y+3);
+                            addHeartDrop(x,y);
                         }
                         else if(rnd > 20 && rnd <= 45) //Arrowdrop 25%
                         {
-                            addArrowDrop(x,y+3);
+                            addArrowDrop(x,y);
                         }
                         else if(rnd >45 && rnd <= 75) //Coindrop 30%
                         {
-                            addCoinDrop(x,y+3);
+                            addCoinDrop(x,y);
                         }
                         else if(rnd >75 && rnd <= 90) //Coindrop 15%
                         {
-                            addCoinDrop(x-3,y+3);
-                            addCoinDrop(x+3,y+3);
+                            addCoinDrop(x-3,y);
+                            addCoinDrop(x+3,y);
                         }
                         else if(rnd >90) //Coindrop 10%
                         {
-                            addCoinDrop(x-5,y+3);
-                            addCoinDrop(x,y+3);
-                            addCoinDrop(x+5,y+3);
+                            addCoinDrop(x-5,y);
+                            addCoinDrop(x,y);
+                            addCoinDrop(x+5,y);
                         }
                     } 
                     
@@ -732,101 +859,6 @@
                         cube2.position.y= -5;
                         scene.add(cube2);
                         animate();
-                    }
-                    function createWorld1()
-                    {
-                        //sunlight
-                        var sunLight = new THREE.DirectionalLight( 0xffffff, 1);
-                        sunLight.position.set(100,200,+100);
-//                        sunLight.shadowCameraVisible = true;
-                        sunLight.shadowDarkness = 1.95;
-                        sunLight.intensity = 0.1;
-                        sunLight.castShadow = true;
-                        sunLight.shadowMapHeight = 4098;
-                        sunLight.shadowMapWidth = 4098;
-                        scene.add(sunLight)
-                        
-                        //world-light
-//                        var ambientLight = new THREE.AmbientLight( 0x404040,2 ); // soft white light
-//                        scene.add( ambientLight );
-                        var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-                        scene.add( hemiLight );
-
-                        //world 1
-                        var world1;
-                        var worldTexture = new THREE.ImageUtils.loadTexture( 'Models/World/world1.png' );
-                        worldTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/World/world1.json", function(geometry){
-                        var materialworld = new THREE.MeshLambertMaterial({ map: worldTexture});
-                        world1 = new THREE.Mesh(geometry, materialworld);
-                        world1.castShadow=true;
-                        world1.receiveShadow=true;
-                        world1.position.y = -1;
-                        world1.scale.set(5,5,5);
-                        scene.add(world1);
-                        colliderWorld.push(world1);
-                        });
-                        var door;
-                        var doorTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/door.png' );
-                        worldTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/Misc/door.json", function(geometry){
-                        var materialdoor = new THREE.MeshLambertMaterial({ map: doorTexture});
-                        door = new THREE.Mesh(geometry, materialdoor);
-                        door.castShadow=true;
-                        door.receiveShadow=true;
-                        door.position.y = 8;
-                        door.position.x = 282;
-                        door.position.z = 9;
-                        door.scale.set(5,5,5);
-                        scene.add(door);
-                        });
-                        
-                        //Saw
-                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
-                        worldTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/Misc/saw.json", function(geometry){
-                        var materialworld = new THREE.MeshLambertMaterial({ map: sawTexture});
-                        saw = new THREE.Mesh(geometry, materialworld);
-                        saw.castShadow=true;
-                        saw.receiveShadow=true;
-                        saw.position.y = 10;
-                        saw.position.x = -50;
-                        saw.scale.set(5,5,5);
-                        scene.add(saw);
-//                        sawcolliderdw.push(world1);
-                        });
-                        
-                        //skybox
-                        var skyPath = "Models/World/Skybox/sky";
-                        var skyDir  = ["left", "right", "up", "down", "back", "front"];
-                        var skyType = ".png";
-                        var skyGeometry = new THREE.BoxGeometry( 750, 750, 750 );	
-                        var skyMat = [];
-                        for (var i = 0; i < 6; i++)
-                                skyMat.push( new THREE.MeshBasicMaterial({
-                                        map: THREE.ImageUtils.loadTexture( skyPath + skyDir[i] + skyType ),
-                                        side: THREE.BackSide,
-                                }));
-                        var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
-                        skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
-                        scene.add( skyBox );
-                        addAI(30,50);                        
-//                        addAI(20,50);                        
-//                        addAI(30,50);    
-//                        addArrowDrop(5,10);                    
-//                        addArrowDrop(25,10);                    
-//                        addArrowDrop(15,10);  
-//                        addCoinDrop(5,10);
-//                        addAI(10,30);              
-//                        addAI(15,30);              
-//                        addAI(20,30);              
-//                        addAI(25,30);              
-                        //Time
-                        startLocalTime();
-                    }
-                    function world1Events()
-                    {
-                            saw.translateX( sawSpeed );
                     }
                     function healthStatus()
                     {
@@ -841,6 +873,11 @@
                         camera.position.y = player.position.y+25;
                         //skybox
                         skyBox.position.x = player.position.x;
+                        //Saw
+                        saw.translateX( sawSpeed );
+                        //sun
+                        sunLight.target=player;
+                        sunLight.position.x=player.position.x+150;
                     }
                     function playerCollision()
                     {
@@ -858,14 +895,30 @@
                         {
                             ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,1.75);
                             ray2 = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,5);
+                            var item = ray1.intersectObjects(colliderObjects);
+                            
+                            //world
                             if(ray1.intersectObjects(colliderWorld).length > 0 )
                             {
                                 player.position.x=oldx;
                             }
-//                             if(ray1.intersectObjects(colliderObjects).length>0)
-//                            {
-//                                destroyCoin(ray1.intersectObjects(colliderObjects)[0].object);
-//                            }
+                            //item
+                            if(item.length>0)
+                            {
+                                if(item[0].object.name=="coin")
+                                {
+                                    destroyCoin(item[0].object);
+                                }
+                                if(item[0].object.name=="arrowDrop")
+                                {
+                                    destroyArrowDrop(item[0].object);
+                                }
+                                if(item[0].object.name=="heart")
+                                {
+                                    destroyHeartDrop(item[0].object);
+                                }
+                            }
+                            //enemy
                             if(ray2.intersectObjects(colliderEnemy).length > 0)
                             {
                                 if(!playerIsInvincible)
@@ -888,10 +941,12 @@
                             ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,1.75);
                             ray2 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,5);
                             var item = ray1.intersectObjects(colliderObjects);
+                            //world
                             if(ray1.intersectObjects(colliderWorld).length > 0 )
                             {
                                 player.position.x=oldx;
                             }
+                            //item
                             if(item.length>0)
                             {
                                 if(item[0].object.name=="coin")
@@ -907,6 +962,7 @@
                                     destroyHeartDrop(item[0].object);
                                 }
                             }
+                            //world
                             if(ray2.intersectObjects(colliderEnemy).length > 0)
                             {
                                 if(!playerIsInvincible)
@@ -921,14 +977,38 @@
                                     }
                                 }
                             }
+                            //saw
+                            if(ray2.intersectObjects(colliderSaw).length > 0)
+                            {
+                                deathScreen();
+                            }
                         }
                         
                         //UP   
                         ray1 = new THREE.Raycaster(new THREE.Vector3( player.position.x, player.position.y+13.5, 0),new THREE.Vector3(0,1,0),0,2);
+                        var item = ray1.intersectObjects(colliderObjects);
+                        //world
                         if(ray1.intersectObjects(colliderWorld).length > 0 )
                         {
                             jumpReady=false;
                         }
+                        //Item
+                        if(item.length>0)
+                            {
+                                if(item[0].object.name=="coin")
+                                {
+                                    destroyCoin(item[0].object);
+                                }
+                                if(item[0].object.name=="arrowDrop")
+                                {
+                                    destroyArrowDrop(item[0].object);
+                                }
+                                if(item[0].object.name=="heart")
+                                {
+                                    destroyHeartDrop(item[0].object);
+                                }
+                            }
+                         //Enemy
                         if(ray1.intersectObjects(colliderEnemy).length > 0)
                         {
                             if(!playerIsInvincible)
@@ -947,6 +1027,8 @@
                         for(var i=3;i < 6; i++)
                         {
                             ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,2.3);
+                            var item = ray1.intersectObjects(colliderObjects);
+                            //world
                             if(ray1.intersectObjects(colliderWorld).length > 0 )
                             {
                                 rayGround[i-3]=true;
@@ -954,6 +1036,22 @@
                             else
                             {
                                 rayGround[i-3]=false;
+                            }
+                            //item
+                            if(item.length>0)
+                            {
+                                if(item[0].object.name=="coin")
+                                {
+                                    destroyCoin(item[0].object);
+                                }
+                                if(item[0].object.name=="arrowDrop")
+                                {
+                                    destroyArrowDrop(item[0].object);
+                                }
+                                if(item[0].object.name=="heart")
+                                {
+                                    destroyHeartDrop(item[0].object);
+                                }
                             }
                         }
                         if(rayGround[0] || rayGround[1] || rayGround[2])
@@ -966,12 +1064,13 @@
                                 player.translateY( -fallSpeed );
                         }
                         //Kill enemy raycast
-                        ray2 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.2,12.75);
-                        if(ray2.intersectObjects(colliderEnemy).length>0)
+                        ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.0,12.9);
+                        if(ray1.intersectObjects(colliderEnemy).length>0)
                         {
-                            destroyEnemy(ray2.intersectObjects(colliderEnemy)[0].object);
+                            destroyEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
                         }
                     }
+                    
                     function playerControls()
                     {
                             if(isGround)
@@ -1063,6 +1162,235 @@
                             playerAnimation.stop();
                         }
                     }
+                     function createRndWorld()
+                    {
+                        //sunlight
+                        sunLight = new THREE.DirectionalLight( 0xffffff, 1);
+                        sunLight.position.set(100,200,+100);
+//                        sunLight.shadowCameraVisible = true;
+                        sunLight.shadowDarkness = 1.95;
+                        sunLight.intensity = 0.1;
+                        sunLight.castShadow = true;
+                        sunLight.shadowMapHeight = 4098;
+                        sunLight.shadowMapWidth = 4098;
+                        scene.add(sunLight);
+                        createPlayer(0,15);
+                        //world-light
+//                        var ambientLight = new THREE.AmbientLight( 0x404040,2 ); // soft white light
+//                        scene.add( ambientLight );
+                        var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+                        scene.add( hemiLight );
+                        
+                        //StartBiome
+                        createRndMapNext();
+                        
+                        //skybox
+                        var skyPath = "Models/World/Skybox/sky";
+                        var skyDir  = ["left", "right", "up", "down", "back", "front"];
+                        var skyGeometry = new THREE.BoxGeometry( 750, 750, 750 );	
+                        var skyMat = [];
+                        for (var i = 0; i < 6; i++)
+                        {
+                            var skyTexture = new THREE.ImageUtils.loadTexture( skyPath + skyDir[i] +".png");
+                            skyTexture.minFilter = THREE.NearestFilter;
+                            var meshBasic = new THREE.MeshBasicMaterial();
+                            meshBasic.side = THREE.BackSide;
+                            meshBasic.map = skyTexture;
+                            skyMat.push(meshBasic);
+                        }
+//                        skyMat.push();
+                        var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
+                        skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+                        scene.add( skyBox );
+                        addAI(25,15);
+                        
+                        //Saw
+                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
+                        sawTexture.minFilter = THREE.NearestFilter;
+                        objLoader.load( "Models/Misc/saw.json", function(geometry){
+                        var materialworld = new THREE.MeshLambertMaterial({ map: sawTexture});
+                        saw = new THREE.Mesh(geometry, materialworld);
+                        saw.castShadow=true;
+                        saw.receiveShadow=true;
+                        saw.position.y = 10;
+                        saw.position.x = -100;
+                        saw.scale.set(5,9,5);
+                        scene.add(saw);
+                        colliderSaw.push(saw);
+                        });
+                        //Time
+                        startLocalTime();
+                        animate();
+                    }
+                    function createRndMapNext()
+                    {
+                        var rnd = Math.floor((Math.random() * 10) + 1);
+                        if(rndBiomeSize<=0)
+                        {
+                            rndBiome = Math.floor((Math.random() * 3) + 1);
+                            switch(rndBiome)
+                            {
+                                case 1: rndBiomeType="dirt"; break;
+                                case 2: rndBiomeType="stone"; break;
+                                case 3: rndBiomeType="sand"; break;
+                            }
+                            rndBiomeSize = Math.floor((Math.random() * 10) + 1);
+                        }
+                        
+                        //Enemy spawn
+                        var rndEnemy = Math.floor((Math.random() * 100) + 1);
+                        if(rndEnemy >= 35 && worldOffsetX > 60) 
+                        {
+                            addAI(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        
+                        //Coin spawn
+                        var rndCoin = Math.floor((Math.random() * 100) + 1);
+                        if(rndCoin >= 67 && worldOffsetX > 60) 
+                        {
+                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        else if(rndCoin < 20 && worldOffsetX > 60) 
+                        {
+                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        
+                        //Arrow
+                        var rndArrow = Math.floor((Math.random() * 100) + 1);
+                        if(rndArrow >= 85 && worldOffsetX > 60) 
+                        {
+                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        else if(rndArrow < 12 && worldOffsetX > 60) 
+                        {
+                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        
+                        //heart
+                        var rndHeart = Math.floor((Math.random() * 100) + 1);
+                        if(rndHeart >= 90 && worldOffsetX > 60) 
+                        {
+                            addHeartDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
+                        }
+                        
+                        //worldspawn
+                        var worldTexture = new THREE.ImageUtils.loadTexture( 'Models/World/Rnd/world1.png' );
+                        worldTexture.minFilter = THREE.NearestFilter;
+                        objLoader.load( "Models/World/Rnd/"+rnd+""+rndBiomeType+".json", function(geometry){
+                        var materialworld = new THREE.MeshLambertMaterial({ map: worldTexture});
+                        world.push(new THREE.Mesh(geometry, materialworld));
+                        world[world.length-1].castShadow=true;
+                        world[world.length-1].receiveShadow=true;
+                        world[world.length-1].position.x = worldOffsetX;
+                        worldOffsetX=worldOffsetX+60;
+                        scene.add(world[world.length-1]);
+                        rndBiomeSize--;
+                        colliderWorld.push(world[world.length-1]);
+                        
+                        });
+                    }
+                    function rndWorldController()
+                    {
+                        //add
+                        if(player.position.x >= world[world.length-1].position.x -(120))
+                        {
+                            createRndMapNext();
+                        }
+                        //destroy
+                        if(world[0].position.x+(200) < player.position.x)
+                        {
+                            destroyRndWorld(world[0]);
+                        }
+                        
+                         //destroy enemies
+                         for(var i=0;i<enemy.length;i++)
+                         {
+                             //X
+                            if((enemy[i].position.x+130) <= player.position.x)
+                            {
+                                destroyEnemy(enemy[i]);
+                            }
+                            //fall
+                            if(enemy[i].position.y<=-15)
+                            {
+                                destroyEnemyFall(enemy[i]);
+                            }
+                         }
+                         //destroy hearts
+                         for(var i=0;i<heartDrop.length;i++)
+                         {
+                             //X
+                            if((heartDrop[i].position.x+130) <= player.position.x)
+                            {
+                                destroyHeartDrop(heartDrop[i]);
+                            }
+                            //fall
+                            if(heartDrop[i].position.y<=-15)
+                            {
+                                destroyHeartDropFall(heartDrop[i]);
+                            }
+                         }
+                         //destroy coins
+                         for(var i=0;i<coin.length;i++)
+                         {
+                             //X
+                            if((coin[i].position.x+130) <= player.position.x)
+                            {
+                                destroyCoin(coin[i]);
+                            }
+                            //fall
+                            if(coin[i].position.y<=-15)
+                            {
+                                destroyCoinFall(coin[i]);
+                            }
+                         }
+                         //destroy arrow
+                         for(var i=0;i<arrowDrop.length;i++)
+                         {
+                             //X
+                            if((arrowDrop[i].position.x+130) <= player.position.x)
+                            {
+                                destroyArrowDrop(arrowDrop[i]);
+                            }
+                           //fall
+                            if(arrowDrop[i].position.y<=-15)
+                            {
+                                destroyArrowDropFall(arrowDrop[i]);
+                            }
+                         }
+                    } 
+                    function objectCollision()
+                    {
+                        //coin
+                        for(var i=0;i<coin.length;i++)
+                        {
+                            ray4 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(0,-1,0),0,7); //down
+                            if(ray4.intersectObjects(colliderWorld).length<=0)
+                            {
+                                coin[i].translateY(-coinFallSpeed);
+                            }
+                        }
+                        //arrowDrop
+                        for(var i=0;i<arrowDrop.length;i++)
+                        {
+                            ray4 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y+3,0),new THREE.Vector3(0,-1,0),0,3); //down
+                            if(ray4.intersectObjects(colliderWorld).length<=0)
+                            {
+                                arrowDrop[i].translateY(-arrowDropFallSpeed);
+                            }
+                        }
+                        //heartDrop
+                        for(var i=0;i<heartDrop.length;i++)
+                        {
+                            ray4 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y,0),new THREE.Vector3(0,-1,0),0,0.7); //down
+                            if(ray4.intersectObjects(colliderWorld).length<=0)
+                            {
+                                heartDrop[i].translateY(-heartDropFallSpeed);
+                            }
+                        }
+                    }
                     function animate() 
                     {
                         requestAnimationFrame(animate);
@@ -1076,19 +1404,21 @@
                                 playerCollision();
                                 arrowCollision();
                                 swordCollision();
-                                world1Events();
+                                objectCollision();
+                                rndWorldController();
                                 outOfAmmoHTML();
                                 updateHighscore();
                                 playerControls();
                                 weaponControls();
                                 enemyAI();
+                                camerafollower();
                             }
                             //anistop ESCMenu
                             playerMoveAnimation()
                             
-                            //orbitcontrols tests
-                            orbitController.update(); 
-//                            camerafollower();
+//                            orbitcontrols tests
+//                            orbitController.update(); 
+                            
 
                         }
                     }
