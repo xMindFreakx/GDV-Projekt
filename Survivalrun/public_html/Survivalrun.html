@@ -3,7 +3,7 @@
         <title>Survivalrun</title>
         <meta charset="UTF-8">
         <link rel="icon" type="image/gif" href="favicon.ico" >
-            <meta name="author" content="Andreas Maisch Maxi Hartmann Anton Stein Patrick Kiermasch">
+            <meta name="author" content="Andreas Maisch Patrick Kiermasch">
             <link href="Scripts/style.css" type="text/css" rel="stylesheet">
                 <script src="Scripts/three.js"></script>
 		<script src="Scripts/OrbitControls.js"></script>
@@ -16,24 +16,93 @@
                     Patrick Kiermasch
         -->
 	<body>
-            <div id="highscoreview">
-                <a id="highscoretext">Highscore 0</a>
-            </div>
-            <div id="hpammo">
-                <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><img src="GUI/heart.png" height="35" id="heart4"><img src="GUI/heart.png" height="35" id="heart5"><br>
-                <a id="ammo">2 x </a><img src="GUI/arrow.png" height="40">
-            </div>
-            <div id="timeview">
-                <a id="timeviewtext">00:00</a>
-            </div>
-            <div id="pause">
-                <a id="pausetext"></a>
-            </div>
-             <div id="ammotxt">
-                <a id="noammotext"></a>
+        <!--  Sound -->
+        <audio loop id="bgmusic">
+            <source src = "Sounds/bgmusic.mp3">
+        </audio> 
+        <audio id="move">
+            <source src = "Sounds/move.mp3">
+        </audio> 
+        <audio id="sword">
+            <source src = "Sounds/sword.mp3">
+        </audio> 
+        <audio id="hit">
+            <source src = "Sounds/hit.mp3">
+        </audio> 
+        <audio id="bow">
+            <source src = "Sounds/bow.mp3">
+        </audio> 
+        <audio id="death">
+            <source src = "Sounds/death.mp3">
+        </audio> 
+       
+        <div id="menuBackground">
+            <a id="menuTitle">Survivalrun</a>
+            <img src="GUI/background.png" id="menuBackgroundimg">
+            <a id="menuStartButton">Start</a>
+            <div id="menuSoundVolume"><a>Sound volume </a> <input type="range" min="0" max="100" value="20" oninput="soundChange(this.value)"/> <a id="menuSoundVolumeText">20%</a> </div>
+            <div id="menuGraphic"><a>Graphic: high</a></div>
+        </div>
+            
+            <!-- GUI -->
+            <div id="gameSceme">
+                <div id="highscoreview">
+                    <a id="highscoretext">Highscore 0</a>
+                </div>
+                <div id="hpammo">
+                    <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><img src="GUI/heart.png" height="35" id="heart4"><img src="GUI/heart.png" height="35" id="heart5"><br>
+                    <a id="ammo">2 x </a><img src="GUI/arrow.png" height="40">
+                </div>
+                <div id="timeview">
+                    <a id="timeviewtext">00:00</a>
+                </div>
+                <div id="pause">
+                    <a id="pausetext"></a>
+                </div>
+                 <div id="ammotxt">
+                    <a id="noammotext"></a>
+                </div>
             </div>
 		<script>
-                    //Variables
+                    //Menu variables
+                    var graphic=true;
+                    var graphicShadowMap=true;
+                    var graphicAntialiasing=true;
+                    var soundVolume=0.2;
+                    
+                    //sound
+                     function soundChange(volume)
+                    {
+                       soundVolume=volume/100;
+                       console.log(soundVolume);
+                       $("#menuSoundVolumeText").text(volume+"%");
+                    }
+                    
+                    //startbutton
+                    $( "#menuStartButton" ).click(function() {
+                         $("#menuBackground").hide();
+                        menuStart();
+                   });
+                   
+                   //graphic
+                    $( "#menuGraphic" ).click(function() {
+                        if(graphic===true)
+                        {
+                            $("#menuGraphic").text("Graphic: low");
+                            graphic=false;
+                            graphicShadowMap=false;
+                            graphicAntialiasing=false;
+                        }
+                        else
+                        {
+                            $("#menuGraphic").text("Graphic: high");
+                            graphic=true;
+                            graphicShadowMap=true;
+                            graphicAntialiasing=true;
+                        }
+                   });
+                   
+                    //Game variables
                     //Player
                     var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,playerArrowAmmo;
                     var playerLookDirection;
@@ -48,6 +117,7 @@
                     var sword;
                     var weaponDirection,weaponDirectionX; // Bow Sword
                     var swordHitEnemy;
+                    
                     //Bow
                     var bow;
                     var arrow=[],arrowDirectionX;
@@ -71,7 +141,6 @@
                     var creeperHealth;
                     var zombieHeatlh;
                    
-                    
                     //Coin
                     var coin=[];
                     var coinFallSpeed;
@@ -95,11 +164,20 @@
                     var rndBiomeType;
                     var sunLight;
                     
+                    //other
                     var oldx,oldy;
                     var renderer, scene, camera;
                     var orbitController;
                     var controls;
                     var objLoader;
+                    
+                    //Sound
+                    var soundBg;
+                    var soundMove;
+                    var soundSword;
+                    var soundBow;
+                    var soundHit;
+                    var soundDeath;
                     
                     
                     var menuScene;
@@ -111,8 +189,6 @@
                     //time vars
                     var clock,localSeconds=0,localTimeID,outOfAmmoTime,playerInvincibleTimer,playerInvincibleDuration;
                     
-                    //HMTL
-
                     //ESC-Pause
                      $(document).keyup(function (e) {
                             if(e.which == 27) {
@@ -165,9 +241,6 @@
                                     case 68:
                                         controls.right = true;
                                         break;
-                                    case 83:
-                                        controls.down = true;
-                                        break;
                                 }
                          });
                         $(document).keyup(function (e) {
@@ -180,9 +253,6 @@
                                         break;
                                     case 68:
                                         controls.right = false;
-                                        break;
-                                    case 83:
-                                        controls.down = false;
                                         break;
                                 }
                         });
@@ -209,7 +279,6 @@
                         {
                             sawSpeed=playerMoveSpeed-0.06;
                         }
-                        
                     }
                      //HP-Bar
                     function removeHeartHTML()
@@ -220,12 +289,7 @@
                        }
                        if(playerHealth<=1)
                        {
-                           $("#heart1").hide();
-                           $("#heart2").hide();
-                           $("#heart3").hide();
-                           $("#heart4").hide();
-                           $("#heart5").hide();
-                           //deathscreen
+                           deathScreen();
                        }
                        playerHealth--;
                     }
@@ -233,6 +297,7 @@
                     {
                         playerAlive=false;
                         escMenu=true;
+                        soundDeath.play();
                         playerHealth=1;
                        $("#heart1").hide();
                        $("#heart2").hide();
@@ -288,7 +353,6 @@
                     function addHighscoreValue(value)
                     {
                            highscoreValue=highscoreValue+value;
-                           console.log("xxx");
                     }
                     function addHighscoreSecond()
                     {
@@ -313,10 +377,34 @@
                         document.getElementById("timeviewtext").innerHTML=minute+":"+second;
                     }
                     //THREE JS
-                     init();
+//                     init();
+                     function menuStart()
+                     {
+                         console.log("game started");
+                         init();
+                     }
+                     function soundVolumeChange()
+                     {
+                         
+                     }
                     //Main Start
                     function init() 
                     {
+                        //Sound
+                        soundBg = document.getElementById("bgmusic");
+                        soundBg.volume= soundVolume;
+                        soundBg.play();
+                        soundMove = document.getElementById("move");
+                        soundMove.volume= soundVolume;
+                        soundSword = document.getElementById("sword");
+                        soundSword.volume= soundVolume;
+                        soundBow = document.getElementById("bow");
+                        soundBow.volume= soundVolume;
+                        soundHit = document.getElementById("hit");
+                        soundHit.volume= soundVolume;
+                        soundDeath = document.getElementById("death");
+                        soundDeath.volume= soundVolume;
+                        
                         //Init Variables
                         controls = {
                         left: false,
@@ -332,7 +420,6 @@
                         rayGround=[false,false,false];
                         playerLoaded=false;
                         escMenu=false;
-                        
                         
                         //world
                         worldOffsetX=-120;
@@ -380,11 +467,11 @@
                         
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
-                        renderer = new THREE.WebGLRenderer({ antialias: true});
+                        renderer = new THREE.WebGLRenderer();
+                        renderer.antialias = graphicAntialiasing;
                         renderer.setSize( window.innerWidth, window.innerHeight );
-                        renderer.shadowMapEnabled = true;  //TEST
+                        renderer.shadowMapEnabled = graphicShadowMap;
                         renderer.shadowMapType = THREE.PCFSoftShadowMap;
-                        
                         document.body.appendChild( renderer.domElement );
 
                         //Camera
@@ -399,13 +486,7 @@
 
                         //Dom
                         document.body.appendChild( renderer.domElement );
-                        //Menuscreen
-//                        createMenu();
-                        //Preload Texture
                         preLoadWeapons();
-                        //World 1
-//                        createMenu();
-//                       createWorld1();
                         createRndWorld();
                       
                     }
@@ -868,6 +949,9 @@
                     }
                     function healthStatus()
                     {
+                                //Sound
+                                soundHit.play();
+                                //invincibletimer
                                 playerIsInvincible=true;
                                 removeHeartHTML();
                                 playerInvincibleTimer = new THREE.Clock();
@@ -1189,13 +1273,11 @@
                         sunLight.shadowDarkness = 1.95;
                         sunLight.intensity = 0.1;
                         sunLight.castShadow = true;
-                        sunLight.shadowMapHeight = 4098;
-                        sunLight.shadowMapWidth = 4098;
+                        sunLight.shadowMapHeight = 4096;
+                        sunLight.shadowMapWidth = 4096;
                         scene.add(sunLight);
                         createPlayer(0,15);
-                        //world-light
-//                        var ambientLight = new THREE.AmbientLight( 0x404040,2 ); // soft white light
-//                        scene.add( ambientLight );
+                        
                         var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
                         scene.add( hemiLight );
                         
@@ -1237,6 +1319,7 @@
                         });
                         //Time
                         startLocalTime();
+                        soundBg=
                         animate();
                     }
                     function createRndMapNext()
@@ -1275,11 +1358,11 @@
                         
                         //Arrow
                         var rndArrow = Math.floor((Math.random() * 100) + 1);
-                        if(rndArrow >= 60 && worldOffsetX > 60) 
+                        if(rndArrow >= 70 && worldOffsetX > 60) 
                         {
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
                         }
-                        else if(rndArrow < 20 && worldOffsetX > 60) 
+                        else if(rndArrow < 17 && worldOffsetX > 60) 
                         {
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
@@ -1386,6 +1469,12 @@
                                 destroyArrow(arrow[i]);
                             }
                          }
+                         
+                         //player death
+                         if(player.position.y <= -30)
+                         {
+                             deathScreen();
+                         }
                     } 
                     function objectCollision()
                     {
@@ -1415,6 +1504,36 @@
                             {
                                 heartDrop[i].translateY(-heartDropFallSpeed);
                             }
+                        }
+                    }
+                    function audioController()
+                    {
+                        if((controls.left || controls.right || controls.up) && isGround )
+                        {
+                            soundMove.play();
+                        }
+                        else
+                        {
+                            soundMove.pause();
+                            soundMove.currentTime=0;
+                        }
+                        if(animationSwordPlaying )
+                        {
+                            soundSword.play();
+                        }
+                        else
+                        {
+                            soundSword.pause();
+                            soundSword.currentTime=0;
+                        }
+                        if(animationBowPlaying )
+                        {
+                            soundBow.play();
+                        }
+                        else
+                        {
+                            soundBow.pause();
+                            soundBow.currentTime=0;
                         }
                     }
                     function animate() 
@@ -1448,11 +1567,10 @@
                             {
                                 playerMoveAnimation()
                             }
+                            audioController();
                             
 //                            orbitcontrols tests
 //d                            orbitController.update(); 
-                            
-
                         }
                     }
 		</script>
