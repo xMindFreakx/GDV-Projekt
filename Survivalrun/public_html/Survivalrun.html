@@ -35,6 +35,18 @@
         <audio id="death">
             <source src = "Sounds/death.mp3">
         </audio> 
+        <audio id="coin">
+            <source src = "Sounds/coin.mp3">
+        </audio> 
+        <audio id="enemyHit">
+            <source src = "Sounds/enemyHit.mp3">
+        </audio> 
+        <audio id="itemPickup">
+            <source src = "Sounds/itemPickup.mp3">
+        </audio> 
+        <audio id="heartPickup">
+            <source src = "Sounds/heartPickup.mp3">
+        </audio> 
        
         <div id="menuBackground">
             <a id="menuTitle">Survivalrun</a>
@@ -178,6 +190,10 @@
                     var soundBow;
                     var soundHit;
                     var soundDeath;
+                    var soundCoin;
+                    var soundEnemyHit;
+                    var soundItemPickup;
+                    var soundHeartPickup;
                     
                     
                     var menuScene;
@@ -392,7 +408,7 @@
                     {
                         //Sound
                         soundBg = document.getElementById("bgmusic");
-                        soundBg.volume= soundVolume;
+                        soundBg.volume= soundVolume*0.6;
                         soundBg.play();
                         soundMove = document.getElementById("move");
                         soundMove.volume= soundVolume;
@@ -404,6 +420,14 @@
                         soundHit.volume= soundVolume;
                         soundDeath = document.getElementById("death");
                         soundDeath.volume= soundVolume;
+                        soundCoin = document.getElementById("coin");
+                        soundCoin.volume= soundVolume*1.4;
+                        soundEnemyHit = document.getElementById("enemyHit");
+                        soundEnemyHit.volume= soundVolume;
+                        soundItemPickup = document.getElementById("itemPickup");
+                        soundItemPickup.volume= soundVolume;
+                        soundHeartPickup = document.getElementById("heartPickup");
+                        soundHeartPickup.volume= soundVolume*1.7;
                         
                         //Init Variables
                         controls = {
@@ -812,6 +836,32 @@
                             enemy.splice(enemy.indexOf(enemyScene), 1);
                         }
                     }
+                    function destroyEnemyOnHeadJump(enemyScene)
+                    {
+                        if(colliderEnemy.indexOf(enemyScene)!==-1)
+                        {
+                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                            enemyDirection.splice(enemy.indexOf(enemyScene));
+                            enemyHealth.splice(enemy.indexOf(enemyScene),1);
+                            enemyAnimation.splice(enemy.indexOf(enemyScene),1);
+                            var highscore=EnemyHighscoreValue;
+                            if(enemyScene.name==="creeper")
+                            {
+                                highscore=EnemyHighscoreValue+30;
+                            }
+                            addHighscoreValue(highscore);
+                            if(!soundEnemyHit.ended)
+                            {
+                                soundEnemyHit.pause();
+                                soundEnemyHit.currentTime=0;
+                            }
+                            soundEnemyHit.play();
+                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
+                            scene.remove(enemyScene);
+                            enemy.splice(enemy.indexOf(enemyScene), 1);
+                        }
+                    }
                     function destroyEnemyFall(enemyScene)
                     {
                         if(colliderEnemy.indexOf(enemyScene)!==-1)
@@ -829,6 +879,12 @@
                     function hitEnemy(enemyScene)
                     {
                         var indexEnemy=enemy.indexOf(enemyScene)
+                        if(!soundEnemyHit.ended)
+                        {
+                            soundEnemyHit.pause();
+                            soundEnemyHit.currentTime=0;
+                        }
+                        soundEnemyHit.play();
                         if(enemyHealth[indexEnemy]<= 0)
                         {
                             destroyEnemy(enemyScene);
@@ -850,6 +906,12 @@
                             colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
                             coin.splice(coin.indexOf(coinScene), 1);
                             addHighscoreValue(coinHighscoreValue);
+                            if(!soundCoin.ended)
+                            {
+                                soundCoin.pause();
+                                soundCoin.currentTime=0;
+                            }
+                            soundCoin.play();
                             scene.remove(coinScene);
                         }
                     }
@@ -868,6 +930,12 @@
                         {
                             colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
                             arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
+                            if(!soundItemPickup.ended)
+                            {
+                                soundItemPickup.pause();
+                                soundItemPickup.currentTime=0;
+                            }
+                            soundItemPickup.play();
                             scene.remove(arrowScene);
                             addArrowHTML();
                         }
@@ -887,6 +955,12 @@
                         {
                             colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
                             heartDrop.splice(heartDrop.indexOf(heartScene),1);
+                            if(!soundHeartPickup.ended)
+                            {
+                                soundHeartPickup.pause();
+                                soundHeartPickup.currentTime=0;
+                            }
+                            soundHeartPickup.play();
                             scene.remove(heartScene);
                             addHeartHTML();
                         }
@@ -1158,7 +1232,7 @@
                            ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.0,12.9);
                            if(ray1.intersectObjects(colliderEnemy).length>0)
                            {
-                               destroyEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
+                               destroyEnemyOnHeadJump(ray1.intersectObjects(colliderEnemy)[0].object);
                            }
                        }
                     }
@@ -1301,7 +1375,6 @@
                         var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
                         skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
                         scene.add( skyBox );
-                        addAI(25,15);
                         
                         //Saw
                         var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
