@@ -6,7 +6,6 @@
             <meta name="author" content="Andreas Maisch Patrick Kiermasch">
             <link href="Scripts/style.css" type="text/css" rel="stylesheet">
                 <script src="Scripts/three.js"></script>
-		<script src="Scripts/OrbitControls.js"></script>
                 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	</head>
         <!--
@@ -55,6 +54,17 @@
             <div id="menuSoundVolume"><a>Sound volume </a> <input type="range" min="0" max="100" value="20" oninput="soundChange(this.value)"/> <a id="menuSoundVolumeText">20%</a> </div>
             <div id="menuGraphic"><a>Graphic: high</a></div>
         </div>
+        <div id="deathScreen">
+            <img src="GUI/deathscreen.png" id="deathSCreenBackground">
+            <a id="deadTitle">You are Dead</a>            
+            <div id="statsContainer">
+                <img src="GUI/highscore.png"><p id="statsHighscore">Highscore: </p><br>
+                <img src="GUI/clock.png"><p id="statsTime">Time: </p><br>
+                <img src="GUI/block.png"><p id="statsWalk">Walked blocks: </p><br>
+                <img src="GUI/skull.png"><p id="statsKill">killed enemies: </p><br>
+                <img src="GUI/coin.png"><p id="statsCoin">collected coins: </p>
+            </div>
+        </div>
             
             <!-- GUI -->
             <div id="gameSceme">
@@ -76,6 +86,9 @@
                 </div>
             </div>
 		<script>
+                    //hide deathscreen
+                    $("#deathScreen").hide();
+                    
                     //Menu variables
                     var graphic=true;
                     var graphicShadowMap=true;
@@ -86,7 +99,6 @@
                      function soundChange(volume)
                     {
                        soundVolume=volume/100;
-                       console.log(soundVolume);
                        $("#menuSoundVolumeText").text(volume+"%");
                     }
                     
@@ -121,19 +133,23 @@
                     var playerHealth,playerMaxHealth;
                     var playerIsInvincible;
                     var playerMoveSpeed,fallSpeed,playerDirection;
-                    var playerAnimation,animationSword,animationSwordPlaying,animationBow,animationBowPlaying;
+                    var playerAnimation;
                     var playerAlive;
                     var playerLoaded;
                     
                     //Sword
                     var sword;
-                    var weaponDirection,weaponDirectionX; // Bow Sword
+                    var swordDirection,weaponDirectionX; // Bow Sword
                     var swordHitEnemy;
+                    var animationSwordPlaying;
+                    var animationSword;
                     
                     //Bow
                     var bow;
-                    var arrow=[],arrowDirectionX;
+                    var arrow=[],arrowDirectionX=[],arrowDirection=[];
                     var arrowSpeed;
+                    var animationBow;
+                    var animationBowPlaying;
                     
                     //rays
                     var ray1,ray2,ray4,ray5;
@@ -175,13 +191,15 @@
                     var rndBiome,rndBiomeSize;
                     var rndBiomeType;
                     var sunLight;
+                    var saw;
+                    var skyBox;
                     
                     //other
-                    var oldx,oldy;
+                    var oldx;
                     var renderer, scene, camera;
-                    var orbitController;
                     var controls;
                     var objLoader;
+                    var escMenu;
                     
                     //Sound
                     var soundBg;
@@ -195,12 +213,13 @@
                     var soundItemPickup;
                     var soundHeartPickup;
                     
+                    //Stats
+                    var coinCollected;
+                    var walkedBlocks;
+                    var killedEnemies;
                     
-                    var menuScene;
-                    var skyBox;
-                    var escMenu;
+                    //highscore
                     var highscoreValue,highscoreEverySecondsAmount;
-                    var saw;
                     
                     //time vars
                     var clock,localSeconds=0,localTimeID,outOfAmmoTime,playerInvincibleTimer,playerInvincibleDuration;
@@ -321,7 +340,15 @@
                        $("#heart4").hide();
                        $("#heart5").hide();
                        
-                       document.getElementById("pausetext").innerHTML="~ Death ~";
+                       walkedBlocks=parseInt(player.position.x/10);
+                       
+                       $("#deathScreen").show();
+                       document.getElementById("pausetext").innerHTML="";
+                       document.getElementById("statsHighscore").innerHTML="Highscore:" +highscoreValue;
+                       document.getElementById("statsTime").innerHTML="Time:"+minute+":"+second;
+                       document.getElementById("statsWalk").innerHTML="Walked blocks:"+walkedBlocks;
+                       document.getElementById("statsKill").innerHTML="killed enimes:"+killedEnemies;
+                       document.getElementById("statsCoin").innerHTML="collected coins:"+coinCollected;
                        stopLocalTime();
                        
                     }
@@ -399,10 +426,6 @@
                          console.log("game started");
                          init();
                      }
-                     function soundVolumeChange()
-                     {
-                         
-                     }
                     //Main Start
                     function init() 
                     {
@@ -421,13 +444,27 @@
                         soundDeath = document.getElementById("death");
                         soundDeath.volume= soundVolume;
                         soundCoin = document.getElementById("coin");
-                        soundCoin.volume= soundVolume*1.4;
+                        if((soundVolume*1.4) >= 1)
+                        {
+                            soundCoin.volume= 1;
+                        }
+                        else
+                        {
+                            soundCoin.volume= soundVolume*1.4;
+                        }
                         soundEnemyHit = document.getElementById("enemyHit");
                         soundEnemyHit.volume= soundVolume;
                         soundItemPickup = document.getElementById("itemPickup");
                         soundItemPickup.volume= soundVolume;
                         soundHeartPickup = document.getElementById("heartPickup");
-                        soundHeartPickup.volume= soundVolume*1.7;
+                        if((soundVolume*1.7) >= 1)
+                        {
+                            soundHeartPickup.volume= 1;
+                        }
+                        else
+                        {
+                            soundHeartPickup.volume= soundVolume*1.7;
+                        }
                         
                         //Init Variables
                         controls = {
@@ -440,7 +477,6 @@
                         objLoader = new THREE.JSONLoader();
                         jumpReady=false;
                         isGround=false;
-                        menuScene=false;
                         rayGround=[false,false,false];
                         playerLoaded=false;
                         escMenu=false;
@@ -488,6 +524,9 @@
                         //highscore
                         highscoreEverySecondsAmount=10;
                         highscoreValue=0;
+                        coinCollected=0;
+                        walkedBlocks=0;
+                        killedEnemies=0;
                         
                         scene = new THREE.Scene();
                         jumpPause=clock.getElapsedTime();
@@ -504,9 +543,6 @@
                         camera.position.y = 40;
                         camera.rotation.x = 12;
 
-                        //Orbitcontroller TEST
-                        orbitController = new THREE.OrbitControls( camera );
-                        orbitController.damping = 0.2;
 
                         //Dom
                         document.body.appendChild( renderer.domElement );
@@ -552,12 +588,12 @@
                         animationSword.play();
                         animationSword.loop=false;
                         animationSwordPlaying=true;
-                        weaponDirection=+1;
+                        swordDirection=+1;
                         weaponDirectionX=+3;
                         if(!playerLookDirection)
                         {
                             sword.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            weaponDirection=-1;
+                            swordDirection=-1;
                             weaponDirectionX=-3;
                         }
                         });
@@ -597,13 +633,17 @@
                         arrow[arrow.length-1].position.x = player.position.x;
                         scene.add( arrow[arrow.length-1]);
                         removeArrowHTML();
-                        weaponDirection=+1;
-                        arrowDirectionX=+6;
+
                         if(!playerLookDirection)
                         {
                             arrow[arrow.length-1].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            weaponDirection=-1;
-                            arrowDirectionX=-6;
+                            arrowDirection.push(-1);//arrowdirection
+                            arrowDirectionX.push(-6);//arrowraycorrection
+                        }
+                        else
+                        {
+                            arrowDirection.push(1); //arrowdirection
+                            arrowDirectionX.push(6); //arrowraycorrection
                         }
                         });
                     }
@@ -611,7 +651,7 @@
                     {
                         for(var i=0;i<arrow.length;i++)
                         {
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX, arrow[i].position.y+9,0),new THREE.Vector3(weaponDirection,0,0),0,2); //right
+                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX[i], arrow[i].position.y+9,0),new THREE.Vector3(arrowDirection[i],0,0),0,2); //right
                             if(ray1.intersectObjects(colliderWorld).length <= 0) 
                             {
                                 arrow[i].translateX(arrowSpeed);
@@ -627,7 +667,7 @@
                     {
                             if(animationSwordPlaying && !swordHitEnemy)
                             {
-                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+8,0),new THREE.Vector3(weaponDirection,0,0),0,10); //right
+                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+8,0),new THREE.Vector3(swordDirection,0,0),0,10); //right
                                 if(ray1.intersectObjects(colliderEnemy).length > 0) 
                                 {
                                     hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
@@ -860,6 +900,7 @@
                             spawnRndItem(enemyScene.position.x,enemyScene.position.y);
                             scene.remove(enemyScene);
                             enemy.splice(enemy.indexOf(enemyScene), 1);
+                            killedEnemies++;
                         }
                     }
                     function destroyEnemyFall(enemyScene)
@@ -898,6 +939,8 @@
                     {
                        scene.remove(arrowScene);
                        arrow.splice(arrow.indexOf(arrowScene), 1);
+                       arrowDirection.splice(arrow.indexOf(arrowScene), 1);
+                       arrowDirectionX.splice(arrow.indexOf(arrowScene), 1);
                     }
                     function destroyCoin(coinScene)
                     {
@@ -913,6 +956,7 @@
                             }
                             soundCoin.play();
                             scene.remove(coinScene);
+                            coinCollected++;
                         }
                     }
                     function destroyCoinFall(coinScene)
@@ -1430,11 +1474,11 @@
                         
                         //Arrow
                         var rndArrow = Math.floor((Math.random() * 100) + 1);
-                        if(rndArrow >= 70 && worldOffsetX > 60) 
+                        if(rndArrow >= 80 && worldOffsetX > 60) 
                         {
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
                         }
-                        else if(rndArrow < 17 && worldOffsetX > 60) 
+                        else if(rndArrow < 13 && worldOffsetX > 60) 
                         {
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
                             addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
@@ -1536,7 +1580,7 @@
                          for(var i=0;i<arrow.length;i++)
                          {
                              //X
-                            if((arrow[i].position.x+130) <= player.position.x || arrow[i].position.x > (player.position.x+100))
+                            if((arrow[i].position.x+100) <= player.position.x || arrow[i].position.x > (player.position.x+90))
                             {
                                 destroyArrow(arrow[i]);
                             }
@@ -1612,9 +1656,7 @@
                     {
                         requestAnimationFrame(animate);
                         renderer.render( scene, camera );
-                        if(!menuScene)
-                        {
-                            THREE.AnimationHandler.update( clock.getDelta()*3 );
+                        THREE.AnimationHandler.update( clock.getDelta()*3 );
                             
                             if(!escMenu)
                             {
@@ -1640,10 +1682,6 @@
                                 playerMoveAnimation()
                             }
                             audioController();
-                            
-//                            orbitcontrols tests
-//d                            orbitController.update(); 
-                        }
                     }
 		</script>
 	</body>
