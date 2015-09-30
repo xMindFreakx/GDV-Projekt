@@ -13,8 +13,7 @@
         -khtml-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
-        user-select: none;
-
+        cursor: default;
     }
     #menuBackground{
        width: 100%;
@@ -45,6 +44,7 @@
        font-size: 50px;
        font-family: MV Boli;
        color: white;
+       cursor: pointer;
     }
     #menuSoundVolume{
        position: fixed;
@@ -61,6 +61,7 @@
        font-size: 30px;
        font-family: MV Boli;
        color: white;
+       cursor: pointer;
     }
     #highscoreview{
        position: absolute;

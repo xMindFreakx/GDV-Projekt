@@ -1,22 +1,22 @@
 <html>
-	<head>
+    <head>
         <title>Survivalrun</title>
         <meta charset="UTF-8">
         <link rel="icon" type="image/gif" href="favicon.ico" >
-            <meta name="author" content="Andreas Maisch Patrick Kiermasch">
-            <link href="Scripts/style.css" type="text/css" rel="stylesheet">
-                <script src="Scripts/three.js"></script>
-                <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-	</head>
-        <!--
-            GDV Project 2015 - Gruppe NR. 5  - Survivalrun
-                    created by
-                    Andreas Maisch
-                    Patrick Kiermasch
-        -->
-	<body>
+        <meta name="author" content="Andreas Maisch Patrick Kiermasch">
+        <link href="Scripts/style.css" type="text/css" rel="stylesheet">
+        <script src="Scripts/three.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    </head>
+    <!--
+        GDV Project 2015 - Gruppe NR. 5  - Survivalrun
+                created by
+                Andreas Maisch
+                Patrick Kiermasch
+    -->
+    <body>
         <!--  Sound -->
-        <audio loop id="bgmusic">
+        <audio id="bgmusic">
             <source src = "Sounds/bgmusic.mp3">
         </audio> 
         <audio id="move">
@@ -46,12 +46,12 @@
         <audio id="heartPickup">
             <source src = "Sounds/heartPickup.mp3">
         </audio> 
-       
+
         <div id="menuBackground">
             <a id="menuTitle">Survivalrun</a>
             <img src="GUI/background.png" id="menuBackgroundimg">
             <a id="menuStartButton">Start</a>
-            <div id="menuSoundVolume"><a>Sound volume </a> <input type="range" min="0" max="100" value="20" oninput="soundChange(this.value)"/> <a id="menuSoundVolumeText">20%</a> </div>
+            <div id="menuSoundVolume"><a>Sound volume </a> <input type="range" min="0" max="100" value="20"  style="cursor:pointer" oninput="soundChange(this.value)"/> <a id="menuSoundVolumeText">20%</a> </div>
             <div id="menuGraphic"><a>Graphic: high</a></div>
         </div>
         <div id="deathScreen">
@@ -65,1625 +65,1729 @@
                 <img src="GUI/coin.png"><p id="statsCoin">collected coins: </p>
             </div>
         </div>
-            
-            <!-- GUI -->
-            <div id="gameSceme">
-                <div id="highscoreview">
-                    <a id="highscoretext">Highscore 0</a>
-                </div>
-                <div id="hpammo">
-                    <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><img src="GUI/heart.png" height="35" id="heart4"><img src="GUI/heart.png" height="35" id="heart5"><br>
-                    <a id="ammo">2 x </a><img src="GUI/arrow.png" height="40">
-                </div>
-                <div id="timeview">
-                    <a id="timeviewtext">00:00</a>
-                </div>
-                <div id="pause">
-                    <a id="pausetext"></a>
-                </div>
-                 <div id="ammotxt">
-                    <a id="noammotext"></a>
-                </div>
+
+        <!-- GUI -->
+        <div id="gameSceme">
+            <div id="highscoreview">
+                <a id="highscoretext">Highscore 0</a>
             </div>
-		<script>
-                    //hide deathscreen
-                    $("#deathScreen").hide();
-                    
-                    //Menu variables
-                    var graphic=true;
-                    var graphicShadowMap=true;
-                    var graphicAntialiasing=true;
-                    var soundVolume=0.2;
-                    
-                    //sound
-                     function soundChange(volume)
-                    {
-                       soundVolume=volume/100;
-                       $("#menuSoundVolumeText").text(volume+"%");
-                    }
-                    
-                    //startbutton
-                    $( "#menuStartButton" ).click(function() {
-                         $("#menuBackground").hide();
-                        menuStart();
-                   });
-                   
-                   //graphic
-                    $( "#menuGraphic" ).click(function() {
-                        if(graphic===true)
-                        {
-                            $("#menuGraphic").text("Graphic: low");
-                            graphic=false;
-                            graphicShadowMap=false;
-                            graphicAntialiasing=false;
-                        }
-                        else
-                        {
-                            $("#menuGraphic").text("Graphic: high");
-                            graphic=true;
-                            graphicShadowMap=true;
-                            graphicAntialiasing=true;
-                        }
-                   });
-                   
-                    //Game variables
-                    //Player
-                    var player,isGround,jumpReady,jumpTime,jumpPause,groundTimer,playerArrowAmmo;
-                    var playerLookDirection;
-                    var playerHealth,playerMaxHealth;
-                    var playerIsInvincible;
-                    var playerMoveSpeed,fallSpeed,playerDirection;
-                    var playerAnimation;
-                    var playerAlive;
-                    var playerLoaded;
-                    
-                    //Sword
-                    var sword;
-                    var swordDirection,weaponDirectionX; // Bow Sword
-                    var swordHitEnemy;
-                    var animationSwordPlaying;
-                    var animationSword;
-                    
-                    //Bow
-                    var bow;
-                    var arrow=[],arrowDirectionX=[],arrowDirection=[];
-                    var arrowSpeed;
-                    var animationBow;
-                    var animationBowPlaying;
-                    
-                    //rays
-                    var ray1,ray2,ray4,ray5;
-                    var colliderPlayer=[], colliderWorld=[],colliderEnemy=[],colliderObjects=[],colliderSaw=[];
-                    var ray=[],rayEnemy=[];
-                    var rayGround;
-                    
-                    //Enemy
-                    var enemy=[];
-                    var enemyDirection=[];
-                    var enemyAnimation=[];
-                    var enemyHealth=[];
-                    var enemyMovementSpeed;
-                    var enemyFallSpeed;
-                    var enemySpotRange;
-                    var EnemyHighscoreValue;
-                    var creeperHealth;
-                    var zombieHeatlh;
-                   
-                    //Coin
-                    var coin=[];
-                    var coinFallSpeed;
-                    var coinAnimation;
-                    var coinHighscoreValue;
-                    
-                    //HeartDrop
-                    var heartDrop=[];
-                    var heartDropDropFallSpeed;
-                    var heartDropAnimation;
-                    
-                    //Arrowdrop
-                    var arrowDrop=[];
-                    var arrowDropAnimation;
-                    
-                    //World
-                    var worldOffsetX;
-                    var world=[];
-                    var sawSpeed;
-                    var rndBiome,rndBiomeSize;
-                    var rndBiomeType;
-                    var sunLight;
-                    var saw;
-                    var skyBox;
-                    
-                    //other
-                    var oldx;
-                    var renderer, scene, camera;
-                    var controls;
-                    var objLoader;
-                    var escMenu;
-                    
-                    //Sound
-                    var soundBg;
-                    var soundMove;
-                    var soundSword;
-                    var soundBow;
-                    var soundHit;
-                    var soundDeath;
-                    var soundCoin;
-                    var soundEnemyHit;
-                    var soundItemPickup;
-                    var soundHeartPickup;
-                    
-                    //Stats
-                    var coinCollected;
-                    var walkedBlocks;
-                    var killedEnemies;
-                    
-                    //highscore
-                    var highscoreValue,highscoreEverySecondsAmount;
-                    
-                    //time vars
-                    var clock,localSeconds=0,localTimeID,outOfAmmoTime,playerInvincibleTimer,playerInvincibleDuration;
-                    
-                    //ESC-Pause
-                     $(document).keyup(function (e) {
-                            if(e.which == 27) {
-                                if(playerAlive)
-                                {
-                                    if(!escMenu )
-                                    {
-                                          escMenu=true;
-                                          document.getElementById("pausetext").innerHTML="~ Pause ~";
-                                          stopLocalTime();
-                                    }
-                                    else
-                                    {
-                                       escMenu=false;
-                                       document.getElementById("pausetext").innerHTML="";
-                                       startLocalTime();
-                                    }
-                                }
+            <div id="hpammo">
+                <img src="GUI/heart.png" height="35" id="heart1"><img src="GUI/heart.png" height="35" id="heart2"><img src="GUI/heart.png" height="35" id="heart3"><img src="GUI/heart.png" height="35" id="heart4"><img src="GUI/heart.png" height="35" id="heart5"><br>
+                <a id="ammo">2 x </a><img src="GUI/arrow.png" height="40">
+            </div>
+            <div id="timeview">
+                <a id="timeviewtext">00:00</a>
+            </div>
+            <div id="pause">
+                <a id="pausetext"></a>
+            </div>
+            <div id="ammotxt">
+                <a id="noammotext"></a>
+            </div>
+        </div>
+        <script>
+            //hide deathscreen
+            $("#deathScreen").hide();
 
-                             }
-                         });
-                         //Weapons
-                        $(document).keydown(function (e) {
-                            if(!escMenu)
-                            {
-                                if(e.keyCode==32 && !animationSwordPlaying && !animationBowPlaying)
-                                {
-                                    playerSwordAttack();
-                                }
-                                if(e.keyCode==67 && !animationBowPlaying && !animationSwordPlaying && playerArrowAmmo>0)
-                                {
-                                    playerBowAttack();
-                                }
-                                if(e.keyCode==67 && playerArrowAmmo<=0)
-                                {
-                                    document.getElementById("noammotext").innerHTML="~ out of ammo ~";
-                                    outOfAmmoTime=localSeconds+2;
-                                }
-                            }
-                         });
-                        //Controls
-                        $(document).keydown(function (e) {
-                                switch (e.keyCode) {
-                                    case 65:
-                                        controls.left = true;
-                                        break;
-                                    case 87:
-                                        controls.up = true;
-                                        break;
-                                    case 68:
-                                        controls.right = true;
-                                        break;
-                                }
-                         });
-                        $(document).keyup(function (e) {
-                                switch (e.keyCode) {
-                                    case 65:
-                                        controls.left = false;
-                                        break;
-                                    case 87:
-                                        controls.up = false;
-                                        break;
-                                    case 68:
-                                        controls.right = false;
-                                        break;
-                                }
-                        });
-                        //Time
-                    function startLocalTime()
-                    {
-                        localTimeID =  window.setInterval(function() {
-                        ++localSeconds;
-                        timer();
-                        if((localSeconds%5)==0)
-                        {
-                            addHighscoreSecond();
-                        }
-                      }, 1000);
-                    }
-                    function stopLocalTime()
-                    {
-                        window.clearInterval(localTimeID);
-                    }
-                    //sawSpeed
-                    function sawSpeedUpdate()
-                    {
-                        if(localSeconds>=180)
-                        {
-                            sawSpeed=playerMoveSpeed-0.06;
-                        }
-                    }
-                     //HP-Bar
-                    function removeHeartHTML()
-                    {
-                       if(playerHealth>1)
-                       {
-                           document.getElementById("heart"+playerHealth).src="GUI/heartempty.png";
-                       }
-                       if(playerHealth<=1)
-                       {
-                           deathScreen();
-                       }
-                       playerHealth--;
-                    }
-                    function deathScreen()
-                    {
-                        playerAlive=false;
-                        escMenu=true;
-                        soundDeath.play();
-                        playerHealth=1;
-                       $("#heart1").hide();
-                       $("#heart2").hide();
-                       $("#heart3").hide();
-                       $("#heart4").hide();
-                       $("#heart5").hide();
-                       
-                       walkedBlocks=parseInt(player.position.x/10);
-                       
-                       $("#deathScreen").show();
-                       document.getElementById("pausetext").innerHTML="";
-                       document.getElementById("statsHighscore").innerHTML="Highscore:" +highscoreValue;
-                       document.getElementById("statsTime").innerHTML="Time:"+minute+":"+second;
-                       document.getElementById("statsWalk").innerHTML="Walked blocks:"+walkedBlocks;
-                       document.getElementById("statsKill").innerHTML="killed enimes:"+killedEnemies;
-                       document.getElementById("statsCoin").innerHTML="collected coins:"+coinCollected;
-                       stopLocalTime();
-                       
-                    }
-                    function addHeartHTML()
-                    {
-                       if(playerHealth>=playerMaxHealth)
-                       {
-                          //do nothing
-                       }
-                       else
-                       {
-                           playerHealth++;
-                           document.getElementById("heart"+playerHealth).src="GUI/heart.png";
-                       }
+            //Menu variables
+            var graphic = true;
+            var graphicShadowMap = true;
+            var graphicAntialiasing = true;
+            var soundVolume = 0.2;
+            var soundMute=false;
+            var enteredGame=false;
 
-                    }
-                    function addArrowHTML()
-                    {
-                        playerArrowAmmo++;
-                        document.getElementById("ammo").innerHTML=+playerArrowAmmo+" x ";
-                    }
-                    function removeArrowHTML()
-                    {
-                       if(playerArrowAmmo<1)
-                       {
-                          //do nothing
-                       }
-                       else
-                       {
-                           playerArrowAmmo--;
-                           document.getElementById("ammo").innerHTML=+playerArrowAmmo+" x ";
-                       }
-                    }
-                    function outOfAmmoHTML()
-                    {
-                        if(localSeconds>=outOfAmmoTime)
-                        {
-                            document.getElementById("noammotext").innerHTML="";
-                        }
-                    }
-                    function updateHighscoreHTML()
-                    {
-                        document.getElementById("highscoretext").innerHTML="Highscore "+highscoreValue;
-                    }
-                    function addHighscoreValue(value)
-                    {
-                           highscoreValue=highscoreValue+value;
-                    }
-                    function addHighscoreSecond()
-                    {
-                           highscoreValue+=highscoreEverySecondsAmount;
-                    }
-                    function timer()
-                    {
-                        minute = parseInt(localSeconds/60);
-                        second = parseInt(localSeconds%60);
-                        if(minute<10)
-                        {
-                           minute ="0"+minute;
-                        }
-                        if(minute>=60)
-                        {
-                            minute=59;
-                        }
-                        if(second<10)
-                        {
-                            second="0"+second;
-                        }
-                        document.getElementById("timeviewtext").innerHTML=minute+":"+second;
-                    }
-                    //THREE JS
-//                     init();
-                     function menuStart()
-                     {
-                         console.log("game started");
-                         init();
-                     }
-                    //Main Start
-                    function init() 
-                    {
-                        //Sound
-                        soundBg = document.getElementById("bgmusic");
-                        soundBg.volume= soundVolume*0.6;
-                        soundBg.play();
-                        soundMove = document.getElementById("move");
-                        soundMove.volume= soundVolume;
-                        soundSword = document.getElementById("sword");
-                        soundSword.volume= soundVolume;
-                        soundBow = document.getElementById("bow");
-                        soundBow.volume= soundVolume;
-                        soundHit = document.getElementById("hit");
-                        soundHit.volume= soundVolume;
-                        soundDeath = document.getElementById("death");
-                        soundDeath.volume= soundVolume;
-                        soundCoin = document.getElementById("coin");
-                        if((soundVolume*1.4) >= 1)
-                        {
-                            soundCoin.volume= 1;
-                        }
-                        else
-                        {
-                            soundCoin.volume= soundVolume*1.4;
-                        }
-                        soundEnemyHit = document.getElementById("enemyHit");
-                        soundEnemyHit.volume= soundVolume;
-                        soundItemPickup = document.getElementById("itemPickup");
-                        soundItemPickup.volume= soundVolume;
-                        soundHeartPickup = document.getElementById("heartPickup");
-                        if((soundVolume*1.7) >= 1)
-                        {
-                            soundHeartPickup.volume= 1;
-                        }
-                        else
-                        {
-                            soundHeartPickup.volume= soundVolume*1.7;
-                        }
-                        
-                        //Init Variables
-                        controls = {
-                        left: false,
-                        up: false,
-                        right: false,
-                        };
-                        clock = new THREE.Clock();
-                        loadManager = new THREE.LoadingManager();
-                        objLoader = new THREE.JSONLoader();
-                        jumpReady=false;
-                        isGround=false;
-                        rayGround=[false,false,false];
-                        playerLoaded=false;
-                        escMenu=false;
-                        
-                        //world
-                        worldOffsetX=-120;
-                        rndBiomeSize=-1;
-                        sawSpeed=0.45;
-                        
-                        //Playersettings
-                        playerMoveSpeed=0.6;
-                        sawSpeed=0.4;
-                        jumpSpeed=1;
-                        fallSpeed=0.35;
-                        playerHealth=5;
-                        playerMaxHealth=5;
-                        playerInvincibleDuration=1;
-                        playerArrowAmmo=2;
-                        arrowSpeed=playerMoveSpeed*2;
-                        playerAlive=true;
-                        swordHitEnemy=false;
-                        
-                        //Enemy
-                        enemyMovementSpeed=0.45;
-                        enemyFallSpeed=0.7;
-                        enemySpotRange=25;
-                        EnemyHighscoreValue=50;
-                        zombieHeatlh=0;
-                        creeperHealth=1;
-                        
-                        //Coin
-                        coinFallSpeed=0.35;
-                        coinHighscoreValue=100;
-                        
-                        //DropCount
-                        coinDropCount=0;
-                        colliderObjectCount=-1;
-                        
-                        //Heart
-                        heartDropFallSpeed=0.35;
-                        
-                        //arrow
-                        arrowDropFallSpeed=0.35;
-                        
-                        //highscore
-                        highscoreEverySecondsAmount=10;
-                        highscoreValue=0;
-                        coinCollected=0;
-                        walkedBlocks=0;
-                        killedEnemies=0;
-                        
-                        scene = new THREE.Scene();
-                        jumpPause=clock.getElapsedTime();
-                        renderer = new THREE.WebGLRenderer();
-                        renderer.antialias = graphicAntialiasing;
-                        renderer.setSize( window.innerWidth, window.innerHeight );
-                        renderer.shadowMapEnabled = graphicShadowMap;
-                        renderer.shadowMapType = THREE.PCFSoftShadowMap;
-                        document.body.appendChild( renderer.domElement );
+            //sound
+            function soundChange(volume)
+            {
+                soundVolume = volume / 100;
+                $("#menuSoundVolumeText").text(volume + "%");
+            }
 
-                        //Camera
-                        camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-                        camera.position.z = 60;
-                        camera.position.y = 40;
-                        camera.rotation.x = 12;
+            //startbutton
+            $("#menuStartButton").click(function () {
+                enteredGame=true;
+                $('body').css('cursor', 'none');
+                $("#menuBackground").hide();
+                menuStart();
+            });
 
+            //graphic
+            $("#menuGraphic").click(function () {
+                if (graphic === true)
+                {
+                    $("#menuGraphic").text("Graphic: low");
+                    graphic = false;
+                    graphicShadowMap = false;
+                    graphicAntialiasing = false;
+                }
+                else
+                {
+                    $("#menuGraphic").text("Graphic: high");
+                    graphic = true;
+                    graphicShadowMap = true;
+                    graphicAntialiasing = true;
+                }
+            });
 
-                        //Dom
-                        document.body.appendChild( renderer.domElement );
-                        preLoadWeapons();
-                        createRndWorld();
-                      
-                    }
-                    function createPlayer(x,y)
-                    {
-                        objLoader.load( "Models/Player/player.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        player.position.y = y;
-                        player.position.x = x;
-                        player.scale.set(5,5,5);
-                        player.castShadow =true;
-                        player.receiveShadow =true;
-                        scene.add( player );
-                        playerAnimation = new THREE.Animation( player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                        colliderPlayer=[player];
-                        playerLookDirection=true;
-                        playerLoaded=true;
-                        }); 
-                       
-                    }
-                    function playerSwordAttack()
-                    {
-                        objLoader.load( "Models/Player/sword.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        sword = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        sword.position.y = player.position.y;
-                        sword.position.x = player.position.x;
-                        sword.scale.set(5,5,5);
-                        sword.castShadow =true;
-                        scene.add( sword );
-                        animationSword = new THREE.Animation( sword, sword.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                        animationSword.play();
-                        animationSword.loop=false;
-                        animationSwordPlaying=true;
-                        swordDirection=+1;
-                        weaponDirectionX=+3;
-                        if(!playerLookDirection)
-                        {
-                            sword.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            swordDirection=-1;
-                            weaponDirectionX=-3;
-                        }
-                        });
-                    }
-                    function playerBowAttack()
-                    {
-                        objLoader.load( "Models/Player/bow.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        bow = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        bow.position.y = player.position.y;
-                        bow.position.x = player.position.x;
-                        bow.scale.set(5,5,5);
-                        bow.castShadow =true;
-                        scene.add( bow );
-                        animationBow = new THREE.Animation( bow, bow.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                        animationBow.play();
-                        animationBow.loop=false;
-                        animationBowPlaying=true;
-                        weaponDirectionX=+3;
-                        if(!playerLookDirection)
-                        {
-                            bow.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            weaponDirectionX=-3;
-                        }
-                        });
-                        var arrowTex = new THREE.ImageUtils.loadTexture( 'Models/Player/arrow.png' );
-                        arrowTex.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/Player/arrow.json", function(geometry){
-                        var arrowMat = new THREE.MeshLambertMaterial({ map: arrowTex});
-                        arrow.push(new THREE.Mesh(geometry, arrowMat));
-                        arrow[arrow.length-1].castShadow=true;
-                        arrow[arrow.length-1].receiveShadow=true;
-                        arrow[arrow.length-1].position.y = player.position.y;
-                        arrow[arrow.length-1].position.x = player.position.x;
-                        scene.add( arrow[arrow.length-1]);
-                        removeArrowHTML();
+            //Game variables
+            //Player
+            var player, isGround, jumpReady, jumpTime, jumpPause, groundTimer, playerArrowAmmo;
+            var playerLookDirection;
+            var playerHealth, playerMaxHealth;
+            var playerIsInvincible;
+            var playerMoveSpeed, playerFallSpeed, playerDirection;
+            var playerAnimation;
+            var playerAlive;
+            var playerLoaded;
 
-                        if(!playerLookDirection)
-                        {
-                            arrow[arrow.length-1].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            arrowDirection.push(-1);//arrowdirection
-                            arrowDirectionX.push(-6);//arrowraycorrection
-                        }
-                        else
-                        {
-                            arrowDirection.push(1); //arrowdirection
-                            arrowDirectionX.push(6); //arrowraycorrection
-                        }
-                        });
-                    }
-                    function arrowCollision()
-                    {
-                        for(var i=0;i<arrow.length;i++)
-                        {
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x+arrowDirectionX[i], arrow[i].position.y+9,0),new THREE.Vector3(arrowDirection[i],0,0),0,2); //right
-                            if(ray1.intersectObjects(colliderWorld).length <= 0) 
-                            {
-                                arrow[i].translateX(arrowSpeed);
-                            }
-                           if(ray1.intersectObjects(colliderEnemy).length > 0) 
-                            {
-                                destroyArrow(arrow[i]);
-                                hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
-                            }
-                        }
-                    }
-                    function swordCollision()
-                    {
-                            if(animationSwordPlaying && !swordHitEnemy)
-                            {
-                                ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x,player.position.y+8,0),new THREE.Vector3(swordDirection,0,0),0,10); //right
-                                if(ray1.intersectObjects(colliderEnemy).length > 0) 
-                                {
-                                    hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
-                                    swordHitEnemy=true;
-                                }
-                            }
-                    }
-                    function preLoadWeapons()
-                    {
-                        var obj;
-                        objLoader.load( "Models/Player/bow.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        obj.position.y = -100;
-                        obj.position.x = -100;
-                        obj.scale.set(5,5,5);
-                        obj.castShadow =true;
-                        obj.receiveShadow =true;
-                        scene.add( obj );
-                        scene.remove(obj);
-                        });
-                        objLoader.load( "Models/Player/sword.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-                        obj.position.y = -100;
-                        obj.position.x = -100;
-                        obj.scale.set(5,5,5);
-                        obj.castShadow =true;
-                        obj.receiveShadow =true;
-                        scene.add( obj );
-                        scene.remove(obj);
-                        });
-                    }
-                    function addAI(x,y) 
-                    {
-                        var rnd=Math.floor((Math.random() * 10) + 1);
-                        var creeper="creeper";
-                        var zombie="zombie";
-                        var enemyTyp;
-                        if(rnd <5)
-                        {
-                            enemyTyp=creeper;
-                        }
-                        else
-                        {
-                            enemyTyp=zombie;
-                        }
-                        objLoader.load( "Models/Enemies/"+enemyTyp+".json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        enemy.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        enemy[enemy.length-1].position.x = x;
-                        enemy[enemy.length-1].position.y = y;
-                        enemy[enemy.length-1].scale.set(5,5,5);
-                        enemy[enemy.length-1].castShadow =true;
-                        enemy[enemy.length-1].receiveShadow =true;
-                        enemy[enemy.length-1].name=enemyTyp;
-                        enemyDirection.push(false);
-                        scene.add( enemy[enemy.length-1]);
-                        
-                        //enemyhealth
-                        if(enemyTyp =="zombie")
-                        {
-                            enemyHealth.push(zombieHeatlh);
-                        }
-                        if(enemyTyp =="creeper")
-                        {
-                            enemyHealth.push(creeperHealth);
-                        }
-                        colliderEnemy.push(enemy[enemy.length-1]);
-                        colliderWorld.push(enemy[enemy.length-1]);
-                        enemyAnimation.push( new THREE.Animation( enemy[enemy.length-1], enemy[enemy.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
-                        });
-                    }
-                    function addCoinDrop(x,y)
-                    {
-                        objLoader.load( "Models/Misc/coin.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        coin.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        coin[coin.length-1].position.x = x;
-                        coin[coin.length-1].position.y = y;
-                        coin[coin.length-1].castShadow =true;
-                        coin[coin.length-1].name ="coin";
-                        scene.add(coin[coin.length-1]);
-                        colliderObjects.push(coin[coin.length-1]);
-                        coinAnimation= new THREE.Animation( coin[coin.length-1], coin[coin.length-1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
-                        coinAnimation.play();
-                        });
-                    }
-                    function addArrowDrop(x,y)
-                    {
-                        objLoader.load( "Models/Misc/arrowdrop.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        arrowDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        arrowDrop[arrowDrop.length-1].position.x = x;
-                        arrowDrop[arrowDrop.length-1].position.y = y;
-                        arrowDrop[arrowDrop.length-1].castShadow =true;
-                        arrowDrop[arrowDrop.length-1].name ="arrowDrop";
-                        scene.add(arrowDrop[arrowDrop.length-1]);
-                        colliderObjects.push(arrowDrop[arrowDrop.length-1]);
-                        arrowDropAnimation= new THREE.Animation( arrowDrop[arrowDrop.length-1],arrowDrop[arrowDrop.length-1].geometry.animations[3], THREE.AnimationHandler.CATMULLROM);
-                        arrowDropAnimation.play();
-                        });
-                    }
-                    function addHeartDrop(x,y)
-                    {
-                        objLoader.load( "Models/Misc/heart.json", function( geometry,materials ) {
-                              for ( var k in materials ) 
-                              {
-                                   materials[k].skinning = true;
-                              }
-                        heartDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
-                        heartDrop[heartDrop.length-1].position.x = x;
-                        heartDrop[heartDrop.length-1].position.y = y;
-                        heartDrop[heartDrop.length-1].castShadow =true;
-                        heartDrop[heartDrop.length-1].name ="heart";
-                        scene.add(heartDrop[heartDrop.length-1]);
-                        colliderObjects.push(heartDrop[heartDrop.length-1]);
-                        heartDropAnimation = new THREE.Animation( heartDrop[heartDrop.length-1], heartDrop[heartDrop.length-1].geometry.animations[1], THREE.AnimationHandler.CATMULLROM);
-                        heartDropAnimation.play();
-                        });
-                        
-                    }
-                    function enemyAI()
-                    {
-                        for(var i=0;i<enemy.length;i++)
-                        {
-                            //left //leftdown
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(-1,0,0),5 ,enemySpotRange);
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(-1,-0.5,0),1,enemySpotRange+2);
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(-1,0,0),0,2.5);
-                            if((ray1.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray2.intersectObjects(colliderWorld).length <= 0)
-                            {
-                                enemy[i].translateX(-enemyMovementSpeed);
-                                if( !enemyAnimation[i].isPlaying)
-                                {
-                                    enemyAnimation[i].play(enemy[i].currentTime);
-                                }
-                            }
-                            
-                            //right //rightdown
-                            ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(1,0,0),5,enemySpotRange);
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(1,-0.5,0),1,enemySpotRange+2);
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+7, 0), new THREE.Vector3(1,0,0),0,2.5);
-                            if((ray2.intersectObjects(colliderPlayer).length>0 || ray4.intersectObjects(colliderPlayer).length>0) &&ray1.intersectObjects(colliderWorld).length <= 0)
-                            {
-                                enemy[i].translateX(-enemyMovementSpeed);
-                                if( !enemyAnimation[i].isPlaying )
-                                {
-                                    enemyAnimation[i].play(enemy[i].currentTime);
-                                }
-                            }
-                            
-                            //down
-                            ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y+1, 0), new THREE.Vector3(0,-1,0),0,1.5);
-                            //FALL
-                            if(ray1.intersectObjects(colliderWorld).length <=0 )
-                            {
-                                enemy[i].translateY(-enemyFallSpeed);
-                            }
-//                            //rotate 180
-                            if(player.position.x >= enemy[i].position.x && !enemyDirection[i])
-                            {
-                                enemyDirection[i]=true;
-                                enemy[i].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            }
-                            if(player.position.x <= enemy[i].position.x && enemyDirection[i])
-                            {
-                                enemyDirection[i]=false;
-                                enemy[i].rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                            }
-                            
-                        }
-                    }
-                    function destroyEnemy(enemyScene)
-                    {
-                        if(colliderEnemy.indexOf(enemyScene)!==-1)
-                        {
-                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
-                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
-                            enemyDirection.splice(enemy.indexOf(enemyScene));
-                            enemyHealth.splice(enemy.indexOf(enemyScene),1);
-                            enemyAnimation.splice(enemy.indexOf(enemyScene),1);
-                            var highscore=EnemyHighscoreValue;
-                            if(enemyScene.name==="creeper")
-                            {
-                                highscore=EnemyHighscoreValue+30;
-                            }
-                            addHighscoreValue(highscore);
-                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
-                            scene.remove(enemyScene);
-                            enemy.splice(enemy.indexOf(enemyScene), 1);
-                        }
-                    }
-                    function destroyEnemyOnHeadJump(enemyScene)
-                    {
-                        if(colliderEnemy.indexOf(enemyScene)!==-1)
-                        {
-                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
-                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
-                            enemyDirection.splice(enemy.indexOf(enemyScene));
-                            enemyHealth.splice(enemy.indexOf(enemyScene),1);
-                            enemyAnimation.splice(enemy.indexOf(enemyScene),1);
-                            var highscore=EnemyHighscoreValue;
-                            if(enemyScene.name==="creeper")
-                            {
-                                highscore=EnemyHighscoreValue+30;
-                            }
-                            addHighscoreValue(highscore);
-                            if(!soundEnemyHit.ended)
-                            {
-                                soundEnemyHit.pause();
-                                soundEnemyHit.currentTime=0;
-                            }
-                            soundEnemyHit.play();
-                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
-                            scene.remove(enemyScene);
-                            enemy.splice(enemy.indexOf(enemyScene), 1);
-                            killedEnemies++;
-                        }
-                    }
-                    function destroyEnemyFall(enemyScene)
-                    {
-                        if(colliderEnemy.indexOf(enemyScene)!==-1)
-                        {
-                            colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
-                            colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
-                            enemyDirection.splice(enemy.indexOf(enemyScene));
-                            enemyHealth.splice(enemy.indexOf(enemyScene),1);
-                            enemyAnimation.splice(enemy.indexOf(enemyScene),1);
-                            spawnRndItem(enemyScene.position.x,enemyScene.position.y);
-                            scene.remove(enemyScene);
-                            enemy.splice(enemy.indexOf(enemyScene), 1);
-                        }
-                    }
-                    function hitEnemy(enemyScene)
-                    {
-                        var indexEnemy=enemy.indexOf(enemyScene)
-                        if(!soundEnemyHit.ended)
-                        {
-                            soundEnemyHit.pause();
-                            soundEnemyHit.currentTime=0;
-                        }
-                        soundEnemyHit.play();
-                        if(enemyHealth[indexEnemy]<= 0)
-                        {
-                            destroyEnemy(enemyScene);
-                        }
-                        else
-                        {
-                            enemyHealth[indexEnemy]--;
-                        }
-                    }
-                    function destroyArrow(arrowScene)
-                    {
-                       scene.remove(arrowScene);
-                       arrow.splice(arrow.indexOf(arrowScene), 1);
-                       arrowDirection.splice(arrow.indexOf(arrowScene), 1);
-                       arrowDirectionX.splice(arrow.indexOf(arrowScene), 1);
-                    }
-                    function destroyCoin(coinScene)
-                    {
-                        if(colliderObjects.indexOf(coinScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
-                            coin.splice(coin.indexOf(coinScene), 1);
-                            addHighscoreValue(coinHighscoreValue);
-                            if(!soundCoin.ended)
-                            {
-                                soundCoin.pause();
-                                soundCoin.currentTime=0;
-                            }
-                            soundCoin.play();
-                            scene.remove(coinScene);
-                            coinCollected++;
-                        }
-                    }
-                    function destroyCoinFall(coinScene)
-                    {
-                        if(colliderObjects.indexOf(coinScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
-                            coin.splice(coin.indexOf(coinScene), 1);
-                            scene.remove(coinScene);
-                        }
-                    }
-                    function destroyArrowDrop(arrowScene)
-                    {
-                        if(colliderObjects.indexOf(arrowScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
-                            arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
-                            if(!soundItemPickup.ended)
-                            {
-                                soundItemPickup.pause();
-                                soundItemPickup.currentTime=0;
-                            }
-                            soundItemPickup.play();
-                            scene.remove(arrowScene);
-                            addArrowHTML();
-                        }
-                    }
-                    function destroyArrowDropFall(arrowScene)
-                    {
-                        if(colliderObjects.indexOf(arrowScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
-                            arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
-                            scene.remove(arrowScene);
-                        }
-                    }
-                    function destroyHeartDrop(heartScene)
-                    {
-                        if(colliderObjects.indexOf(heartScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
-                            heartDrop.splice(heartDrop.indexOf(heartScene),1);
-                            if(!soundHeartPickup.ended)
-                            {
-                                soundHeartPickup.pause();
-                                soundHeartPickup.currentTime=0;
-                            }
-                            soundHeartPickup.play();
-                            scene.remove(heartScene);
-                            addHeartHTML();
-                        }
-                    }
-                    function destroyHeartDropFall(heartScene)
-                    {
-                        if(colliderObjects.indexOf(heartScene)!==-1)
-                        {
-                            colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
-                            heartDrop.splice(heartDrop.indexOf(heartScene),1);
-                            scene.remove(heartScene);
-                        }
-                    }
-                    function destroyRndWorld(worldScene)
-                    {
-                        (colliderWorld.indexOf(worldScene)!==-1)
-                        {
-                            colliderWorld.splice(colliderWorld.indexOf(worldScene), 1);
-                            scene.remove(worldScene);
-                            world.splice(world.indexOf(worldScene), 1);
-                        }
-                    }
-                    function spawnRndItem(x,y)
-                    {
-                        var rnd=Math.floor((Math.random() * 100) + 1);
-                        if(rnd <= 20) //Heartdrop 20%
-                        {
-                            addHeartDrop(x,y);
-                        }
-                        else if(rnd > 20 && rnd <= 45) //Arrowdrop 25%
-                        {
-                            addArrowDrop(x,y);
-                        }
-                        else if(rnd >45 && rnd <= 75) //Coindrop 30%
-                        {
-                            addCoinDrop(x,y);
-                        }
-                        else if(rnd >75 && rnd <= 90) //Coindrop 15%
-                        {
-                            addCoinDrop(x-3,y);
-                            addCoinDrop(x+3,y);
-                        }
-                        else if(rnd >90) //Coindrop 10%
-                        {
-                            addCoinDrop(x-5,y);
-                            addCoinDrop(x,y);
-                            addCoinDrop(x+5,y);
-                        }
-                    } 
-                    
-                    function createMenu()
-                    {
-                        //World
-                        var mat2 = new THREE.MeshBasicMaterial( { color: 0xff0f00 } );
-                        var geo2 = new THREE.BoxGeometry(100, 10, 100);
-                        cube2 = new THREE.Mesh(geo2, mat2);
-                        cube2.position.y= -5;
-                        scene.add(cube2);
-                        animate();
-                    }
-                    function healthStatus()
-                    {
-                                //Sound
-                                soundHit.play();
-                                //invincibletimer
-                                playerIsInvincible=true;
-                                removeHeartHTML();
-                                playerInvincibleTimer = new THREE.Clock();
-                    }
-                    function camerafollower()
-                    {
-                        //Camera 
-                        camera.position.x = player.position.x+5;
-                        camera.position.y = player.position.y+25;
-                        //skybox
-                        skyBox.position.x = player.position.x;
-                        //Saw
-                        saw.translateX( sawSpeed );
-                        //sun
-                        sunLight.target=player;
-                        sunLight.position.x=player.position.x+150;
-                    }
-                    function playerCollision()
-                    {
-                        if(playerLoaded)
-                        {
-                            ray = [
-                               new THREE.Vector3(player.position.x, player.position.y+1,0), //right left bottom0
-                               new THREE.Vector3(player.position.x, player.position.y+6.50, 0), //right left mid1
-                               new THREE.Vector3(player.position.x, player.position.y+11.50, 0),  //right left Upper2
-                               new THREE.Vector3(player.position.x-2, player.position.y+2, 0),//up down 1.83
-                               new THREE.Vector3(player.position.x, player.position.y+2, 0),//up down 1.83
-                               new THREE.Vector3(player.position.x+2, player.position.y+2, 0)//up down4
-                             ];
-                           //Right
-                           for(var i=0;i < 3; i++)
-                           {
-                               ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,1.75);
-                               ray2 = new THREE.Raycaster(ray[i],new THREE.Vector3(1,0,0),0,5);
-                               var item = ray1.intersectObjects(colliderObjects);
+            //Sword
+            var sword;
+            var swordDirection, weaponDirectionX; // Bow Sword
+            var swordHitEnemy;
+            var animationSwordPlaying;
+            var animationSword;
 
-                               //world
-                               if(ray1.intersectObjects(colliderWorld).length > 0 )
-                               {
-                                   player.position.x=oldx;
-                               }
-                               //item
-                               if(item.length>0)
-                               {
-                                   if(item[0].object.name=="coin")
-                                   {
-                                       destroyCoin(item[0].object);
-                                   }
-                                   if(item[0].object.name=="arrowDrop")
-                                   {
-                                       destroyArrowDrop(item[0].object);
-                                   }
-                                   if(item[0].object.name=="heart")
-                                   {
-                                       destroyHeartDrop(item[0].object);
-                                   }
-                               }
-                               //enemy
-                               if(ray2.intersectObjects(colliderEnemy).length > 0)
-                               {
-                                   if(!playerIsInvincible)
-                                   {
-                                       healthStatus();
-                                   }
-                                   else
-                                   {
-                                       if(playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
-                                       {
-                                           playerIsInvincible=false;
-                                       }
-                                   }
-                               }
-                           }
+            //Bow
+            var bow;
+            var arrow = [], arrowDirectionX = [], arrowDirection = [];
+            var arrowSpeed;
+            var animationBow;
+            var animationBowPlaying;
 
-                           //Left
-                           for(var i=0;i < 3; i++)
-                           {
-                               ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,1.75);
-                               ray2 = new THREE.Raycaster(ray[i],new THREE.Vector3(-1,0,0),0,5);
-                               var item = ray1.intersectObjects(colliderObjects);
-                               //world
-                               if(ray1.intersectObjects(colliderWorld).length > 0 )
-                               {
-                                   player.position.x=oldx;
-                               }
-                               //item
-                               if(item.length>0)
-                               {
-                                   if(item[0].object.name=="coin")
-                                   {
-                                       destroyCoin(item[0].object);
-                                   }
-                                   if(item[0].object.name=="arrowDrop")
-                                   {
-                                       destroyArrowDrop(item[0].object);
-                                   }
-                                   if(item[0].object.name=="heart")
-                                   {
-                                       destroyHeartDrop(item[0].object);
-                                   }
-                               }
-                               //world
-                               if(ray2.intersectObjects(colliderEnemy).length > 0)
-                               {
-                                   if(!playerIsInvincible)
-                                   {
-                                       healthStatus();
-                                   }
-                                   else
-                                   {
-                                       if(playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
-                                       {
-                                           playerIsInvincible=false;
-                                       }
-                                   }
-                               }
-                               //saw
-                               if(ray2.intersectObjects(colliderSaw).length > 0)
-                               {
-                                   deathScreen();
-                               }
-                           }
+            //rays
+            var ray1, ray2, ray4, ray5;
+            var colliderPlayer = [], colliderWorld = [], colliderEnemy = [], colliderObjects = [], colliderSaw = [];
+            var ray = [], rayEnemy = [];
+            var rayGround;
 
-                           //UP   
-                           ray1 = new THREE.Raycaster(new THREE.Vector3( player.position.x, player.position.y+13.5, 0),new THREE.Vector3(0,1,0),0,2);
-                           var item = ray1.intersectObjects(colliderObjects);
-                           //world
-                           if(ray1.intersectObjects(colliderWorld).length > 0 )
-                           {
-                               jumpReady=false;
-                           }
-                           //Item
-                           if(item.length>0)
-                               {
-                                   if(item[0].object.name=="coin")
-                                   {
-                                       destroyCoin(item[0].object);
-                                   }
-                                   if(item[0].object.name=="arrowDrop")
-                                   {
-                                       destroyArrowDrop(item[0].object);
-                                   }
-                                   if(item[0].object.name=="heart")
-                                   {
-                                       destroyHeartDrop(item[0].object);
-                                   }
-                               }
-                            //Enemy
-                           if(ray1.intersectObjects(colliderEnemy).length > 0)
-                           {
-                               if(!playerIsInvincible)
-                               {
-                                   healthStatus();
-                               }
-                               else
-                               {
-                                   if(playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
-                                   {
-                                       playerIsInvincible=false;
-                                   }
-                               }
-                           }
-                           //Down
-                           for(var i=3;i < 6; i++)
-                           {
-                               ray1 = new THREE.Raycaster(ray[i],new THREE.Vector3(0,-1,0),0,2.3);
-                               var item = ray1.intersectObjects(colliderObjects);
-                               //world
-                               if(ray1.intersectObjects(colliderWorld).length > 0 )
-                               {
-                                   rayGround[i-3]=true;
-                               }
-                               else
-                               {
-                                   rayGround[i-3]=false;
-                               }
-                               //item
-                               if(item.length>0)
-                               {
-                                   if(item[0].object.name=="coin")
-                                   {
-                                       destroyCoin(item[0].object);
-                                   }
-                                   if(item[0].object.name=="arrowDrop")
-                                   {
-                                       destroyArrowDrop(item[0].object);
-                                   }
-                                   if(item[0].object.name=="heart")
-                                   {
-                                       destroyHeartDrop(item[0].object);
-                                   }
-                               }
-                           }
-                           if(rayGround[0] || rayGround[1] || rayGround[2])
-                           {
-                               isGround=true;
-                           }
-                           else
-                           {
-                                   isGround=false;
-                                   player.translateY( -fallSpeed );
-                           }
-                           //Kill enemy raycast
-                           ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y+12,0),new THREE.Vector3(0,-1,0),12.0,12.9);
-                           if(ray1.intersectObjects(colliderEnemy).length>0)
-                           {
-                               destroyEnemyOnHeadJump(ray1.intersectObjects(colliderEnemy)[0].object);
-                           }
-                       }
-                    }
-                    
-                    function playerControls()
-                    {
-                            if(isGround)
+            //Enemy
+            var enemy = [];
+            var enemyDirection = [];
+            var enemyAnimation = [];
+            var enemyHealth = [];
+            var enemyMovementSpeed;
+            var enemyFallSpeed;
+            var enemySpotRange;
+            var EnemyHighscoreValue;
+            var creeperHealth;
+            var zombieHeatlh;
+
+            //Coin
+            var coin = [];
+            var coinFallSpeed;
+            var coinAnimation;
+            var coinHighscoreValue;
+
+            //HeartDrop
+            var heartDrop = [];
+            var heartDropDropFallSpeed;
+            var heartDropAnimation;
+
+            //Arrowdrop
+            var arrowDrop = [];
+            var arrowDropAnimation;
+
+            //World
+            var worldOffsetX;
+            var world = [];
+            var sawSpeed;
+            var rndBiome, rndBiomeSize;
+            var rndBiomeType;
+            var sunLight;
+            var saw;
+            var skyBox;
+            var animationSaw;
+
+            //other
+            var oldx;
+            var renderer, scene, camera;
+            var controls;
+            var objLoader;
+            var escMenu;
+
+            //Sound
+            var soundBg;
+            var soundMove;
+            var soundSword;
+            var soundBow;
+            var soundHit;
+            var soundDeath;
+            var soundCoin;
+            var soundEnemyHit;
+            var soundItemPickup;
+            var soundHeartPickup;
+
+            //Stats
+            var coinCollected;
+            var walkedBlocks;
+            var killedEnemies;
+
+            //highscore
+            var highscoreValue, highscoreEverySecondsAmount;
+
+            //time vars
+            var clock, localSeconds = 0, localTimeID, outOfAmmoTime, playerInvincibleTimer, playerInvincibleDuration;
+
+            //ESC-Pause & Sound Mute & Enterstart
+            $(document).keyup(function (e) {
+                    if (e.which === 27) {
+                        if (playerAlive)
+                        {
+                            if (!escMenu)
                             {
-                                //JumpPause
-                                if(groundTimer)
-                                {
-                                    jumpPause = clock.getElapsedTime();
-                                    groundTimer=false;
-                                }
-                                if(clock.getElapsedTime()> jumpPause+0.08 && !groundTimer)
-                                {
-                                    jumpReady=true;
-                                    jumpTime =clock.getElapsedTime()
-                                }
+                                escMenu = true;
+                                document.getElementById("pausetext").innerHTML = "~ Pause ~";
+                                stopLocalTime();
                             }
                             else
                             {
-                                groundTimer=true;
+                                escMenu = false;
+                                document.getElementById("pausetext").innerHTML = "";
+                                startLocalTime();
                             }
-                             if(controls.left==true)
-                             {
-                                oldx=player.position.x;
+                        }
+                        else
+                        {
+                            location.reload();
+                        }
+                    }
+                    
+                    //Enter for Start
+                    if (e.which === 13 || e.which === 32) {
+                        
+                        if (!enteredGame)
+                        {
+                            enteredGame=true;
+                            $('body').css('cursor', 'none');
+                            $("#menuBackground").hide();
+                            menuStart();
+                        }
+                    }
+                    //m Mute Sound
+                    if (e.which === 77) 
+                    {
+                        if(!soundMute)
+                        {
+                            soundMute=true;
+                            soundBg.volume =0;
+                            soundBow.volume =0;
+                            soundCoin.volume =0;
+                            soundDeath.volume =0;
+                            soundEnemyHit.volume =0;
+                            soundHit.volume =0;
+                            soundHeartPickup.volume =0;
+                            soundItemPickup.volume =0;
+                            soundMove.volume =0;
+                            soundSword.volume =0;
+                        }
+                        else
+                        {
+                            soundMute=false;
+                            soundBg.volume = soundVolume * 0.6;
+                            soundMove.volume = soundVolume;
+                            soundSword.volume = soundVolume;
+                            soundBow.volume = soundVolume;
+                            soundHit.volume = soundVolume;
+                            soundDeath.volume = soundVolume;
+                            if ((soundVolume * 1.4) >= 1)
+                            {
+                                soundCoin.volume = 1;
+                            }
+                            else
+                            {
+                                soundCoin.volume = soundVolume * 1.4;
+                            }
+                            soundEnemyHit.volume = soundVolume;
+                            soundItemPickup.volume = soundVolume;
+                            if ((soundVolume * 1.7) >= 1)
+                            {
+                                soundHeartPickup.volume = 1;
+                            }
+                            else
+                            {
+                                soundHeartPickup.volume = soundVolume * 1.7;
+                            }
+                        }
+                    }
+                });
+            
+            //Weapons
+            $(document).keydown(function (e) {
+                if (!escMenu)
+                {
+                    if (e.keyCode == 32 && !animationSwordPlaying && !animationBowPlaying)
+                    {
+                        playerSwordAttack();
+                    }
+                    if (e.keyCode == 67 && !animationBowPlaying && !animationSwordPlaying && playerArrowAmmo > 0)
+                    {
+                        playerBowAttack();
+                    }
+                    if (e.keyCode == 67 && playerArrowAmmo <= 0)
+                    {
+                        document.getElementById("noammotext").innerHTML = "~ out of ammo ~";
+                        outOfAmmoTime = localSeconds + 2;
+                    }
+                }
+            });
+            //Controls
+            $(document).keydown(function (e) {
+                switch (e.keyCode) {
+                    case 65:
+                        controls.left = true;
+                        break;
+                    case 87:
+                        controls.up = true;
+                        break;
+                    case 68:
+                        controls.right = true;
+                        break;
+                }
+            });
+            $(document).keyup(function (e) {
+                switch (e.keyCode) {
+                    case 65:
+                        controls.left = false;
+                        break;
+                    case 87:
+                        controls.up = false;
+                        break;
+                    case 68:
+                        controls.right = false;
+                        break;
+                }
+            });
+            //Time
+            function startLocalTime()
+            {
+                localTimeID = window.setInterval(function () {
+                    ++localSeconds;
+                    timer();
+                    if ((localSeconds % 5) == 0)
+                    {
+                        addHighscoreSecond();
+                    }
+                }, 1000);
+            }
+            function stopLocalTime()
+            {
+                window.clearInterval(localTimeID);
+            }
+            //sawSpeed
+            function sawSpeedUpdate()
+            {
+                if (localSeconds >= 60)
+                {
+                    sawSpeed = 0.577;
+                }
+            }
+            //HP-Bar
+            function removeHeartHTML()
+            {
+                if (playerHealth > 1)
+                {
+                    document.getElementById("heart" + playerHealth).src = "GUI/heartempty.png";
+                }
+                if (playerHealth <= 1)
+                {
+                    deathScreen();
+                }
+                playerHealth--;
+            }
+            function deathScreen()
+            {
+                playerAlive = false;
+                escMenu = true;
+//                        stopLocalTime();
+                soundDeath.play();
+                playerHealth = 1;
+                $("#heart1").hide();
+                $("#heart2").hide();
+                $("#heart3").hide();
+                $("#heart4").hide();
+                $("#heart5").hide();
+
+                walkedBlocks = parseInt(player.position.x / 10);
+
+                $("#deathScreen").show();
+                document.getElementById("pausetext").innerHTML = "";
+                document.getElementById("statsHighscore").innerHTML = "Highscore:" + highscoreValue;
+                document.getElementById("statsTime").innerHTML = "Time:" + minute + ":" + second;
+                document.getElementById("statsWalk").innerHTML = "Walked blocks:" + walkedBlocks;
+                document.getElementById("statsKill").innerHTML = "killed enimes:" + killedEnemies;
+                document.getElementById("statsCoin").innerHTML = "collected coins:" + coinCollected;
+            }
+            function addHeartHTML()
+            {
+                if (playerHealth >= playerMaxHealth)
+                {
+                    //do nothing
+                }
+                else
+                {
+                    playerHealth++;
+                    document.getElementById("heart" + playerHealth).src = "GUI/heart.png";
+                }
+
+            }
+            function addArrowHTML()
+            {
+                playerArrowAmmo++;
+                document.getElementById("ammo").innerHTML = +playerArrowAmmo + " x ";
+            }
+            function removeArrowHTML()
+            {
+                if (playerArrowAmmo < 1)
+                {
+                    //do nothing
+                }
+                else
+                {
+                    playerArrowAmmo--;
+                    document.getElementById("ammo").innerHTML = +playerArrowAmmo + " x ";
+                }
+            }
+            function outOfAmmoHTML()
+            {
+                if (localSeconds >= outOfAmmoTime)
+                {
+                    document.getElementById("noammotext").innerHTML = "";
+                }
+            }
+            function updateHighscoreHTML()
+            {
+                document.getElementById("highscoretext").innerHTML = "Highscore " + highscoreValue;
+            }
+            function addHighscoreValue(value)
+            {
+                highscoreValue = highscoreValue + value;
+            }
+            function addHighscoreSecond()
+            {
+                highscoreValue += highscoreEverySecondsAmount;
+            }
+            function timer()
+            {
+                minute = parseInt(localSeconds / 60);
+                second = parseInt(localSeconds % 60);
+                if (minute < 10)
+                {
+                    minute = "0" + minute;
+                }
+                if (second < 10)
+                {
+                    second = "0" + second;
+                }
+                document.getElementById("timeviewtext").innerHTML = minute + ":" + second;
+            }
+            //THREE JS
+//                     init();
+            function menuStart()
+            {
+                init();
+            }
+            //resize
+            function onWindowResize() {
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            //Main Start
+            function init()
+            {
+                //Sound
+                soundBg = document.getElementById("bgmusic");
+                soundBg.volume = soundVolume * 0.6;
+                soundBg.play();
+                soundMove = document.getElementById("move");
+                soundMove.volume = soundVolume;
+                soundSword = document.getElementById("sword");
+                soundSword.volume = soundVolume;
+                soundBow = document.getElementById("bow");
+                soundBow.volume = soundVolume;
+                soundHit = document.getElementById("hit");
+                soundHit.volume = soundVolume;
+                soundDeath = document.getElementById("death");
+                soundDeath.volume = soundVolume;
+                soundCoin = document.getElementById("coin");
+                if ((soundVolume * 1.4) >= 1)
+                {
+                    soundCoin.volume = 1;
+                }
+                else
+                {
+                    soundCoin.volume = soundVolume * 1.4;
+                }
+                soundEnemyHit = document.getElementById("enemyHit");
+                soundEnemyHit.volume = soundVolume;
+                soundItemPickup = document.getElementById("itemPickup");
+                soundItemPickup.volume = soundVolume;
+                soundHeartPickup = document.getElementById("heartPickup");
+                if ((soundVolume * 1.7) >= 1)
+                {
+                    soundHeartPickup.volume = 1;
+                }
+                else
+                {
+                    soundHeartPickup.volume = soundVolume * 1.7;
+                }
+
+                //Init Variables
+                controls = {
+                    left: false,
+                    up: false,
+                    right: false,
+                };
+                clock = new THREE.Clock();
+                loadManager = new THREE.LoadingManager();
+                objLoader = new THREE.JSONLoader();
+                jumpReady = false;
+                isGround = false;
+                rayGround = [false, false, false];
+                playerLoaded = false;
+                escMenu = false;
+                soundBgChromeBug=false;
+
+                //world
+                worldOffsetX = -120;
+                rndBiomeSize = -1;
+                sawSpeed = 0.557;
+
+                //Playersettings
+                playerMoveSpeed = 0.6;
+                jumpSpeed = 1;
+                playerFallSpeed = 0.5;
+                playerHealth = 5;
+                playerMaxHealth = 5;
+                playerInvincibleDuration = 1;
+                playerArrowAmmo = 2;
+                arrowSpeed = playerMoveSpeed * 2;
+                playerAlive = true;
+                swordHitEnemy = false;
+
+                //Enemy
+                enemyMovementSpeed = 0.45;
+                enemyFallSpeed = 0.7;
+                enemySpotRange = 40;
+                EnemyHighscoreValue = 50;
+                zombieHeatlh = 0;
+                creeperHealth = 1;
+
+                //Coin
+                coinFallSpeed = 0.35;
+                coinHighscoreValue = 100;
+
+                //DropCount
+                coinDropCount = 0;
+                colliderObjectCount = -1;
+
+                //Heart
+                heartDropFallSpeed = 0.35;
+
+                //arrow
+                arrowDropFallSpeed = 0.35;
+
+                //highscore
+                highscoreEverySecondsAmount = 10;
+                highscoreValue = 0;
+                coinCollected = 0;
+                walkedBlocks = 0;
+                killedEnemies = 0;
+
+                scene = new THREE.Scene();
+                jumpPause = clock.getElapsedTime();
+                renderer = new THREE.WebGLRenderer();
+                renderer.antialias = graphicAntialiasing;
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMapEnabled = graphicShadowMap;
+                renderer.shadowMapType = THREE.PCFSoftShadowMap;
+                document.body.appendChild(renderer.domElement);
+
+                //Camera
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+                camera.position.z = 60;
+                camera.position.y = 40;
+                camera.rotation.x = 12;
+
+
+                //Dom
+                document.body.appendChild(renderer.domElement);
+                window.addEventListener('resize', onWindowResize, false);
+
+                preLoadWeapons();
+                createRndWorld();
+
+            }
+            function createPlayer(x, y)
+            {
+                objLoader.load("Models/Player/player.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    player = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    player.position.y = y;
+                    player.position.x = x;
+                    player.scale.set(5, 5, 5);
+                    player.castShadow = true;
+                    player.receiveShadow = true;
+                    scene.add(player);
+                    playerAnimation = new THREE.Animation(player, player.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                    colliderPlayer = [player];
+                    playerLookDirection = true;
+                    playerLoaded = true;
+                });
+
+            }
+            function playerSwordAttack()
+            {
+                objLoader.load("Models/Player/sword.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    sword = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    sword.position.y = player.position.y;
+                    sword.position.x = player.position.x;
+                    sword.scale.set(5, 5, 5);
+                    sword.castShadow = true;
+                    scene.add(sword);
+                    animationSword = new THREE.Animation(sword, sword.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                    animationSword.play();
+                    animationSword.loop = false;
+                    animationSwordPlaying = true;
+                    swordDirection = +1;
+                    weaponDirectionX = +3;
+                    if (!playerLookDirection)
+                    {
+                        sword.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                        swordDirection = -1;
+                        weaponDirectionX = -3;
+                    }
+                });
+            }
+            function playerBowAttack()
+            {
+                objLoader.load("Models/Player/bow.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    bow = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    bow.position.y = player.position.y;
+                    bow.position.x = player.position.x;
+                    bow.scale.set(5, 5, 5);
+                    bow.castShadow = true;
+                    scene.add(bow);
+                    animationBow = new THREE.Animation(bow, bow.geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                    animationBow.play();
+                    animationBow.loop = false;
+                    animationBowPlaying = true;
+                    weaponDirectionX = +3;
+                    if (!playerLookDirection)
+                    {
+                        bow.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                        weaponDirectionX = -3;
+                    }
+                });
+                var arrowTex = new THREE.ImageUtils.loadTexture('Models/Player/arrow.png');
+                arrowTex.minFilter = THREE.NearestFilter;
+                objLoader.load("Models/Player/arrow.json", function (geometry) {
+                    var arrowMat = new THREE.MeshLambertMaterial({map: arrowTex});
+                    arrow.push(new THREE.Mesh(geometry, arrowMat));
+                    arrow[arrow.length - 1].castShadow = true;
+                    arrow[arrow.length - 1].receiveShadow = true;
+                    arrow[arrow.length - 1].position.y = player.position.y;
+                    arrow[arrow.length - 1].position.x = player.position.x;
+                    scene.add(arrow[arrow.length - 1]);
+                    removeArrowHTML();
+
+                    if (!playerLookDirection)
+                    {
+                        arrow[arrow.length - 1].rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                        arrowDirection.push(-1);//arrowdirection
+                        arrowDirectionX.push(-6);//arrowraycorrection
+                    }
+                    else
+                    {
+                        arrowDirection.push(1); //arrowdirection
+                        arrowDirectionX.push(6); //arrowraycorrection
+                    }
+                });
+            }
+            function arrowCollision()
+            {
+                for (var i = 0; i < arrow.length; i++)
+                {
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(arrow[i].position.x + arrowDirectionX[i], arrow[i].position.y + 9, 0), new THREE.Vector3(arrowDirection[i], 0, 0), 0, 2); //right
+                    if (ray1.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        arrow[i].translateX(arrowSpeed);
+                    }
+                    if (ray1.intersectObjects(colliderEnemy).length > 0)
+                    {
+                        destroyArrow(arrow[i]);
+                        hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
+                    }
+                }
+            }
+            function swordCollision()
+            {
+                if (animationSwordPlaying && !swordHitEnemy)
+                {
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y + 8, 0), new THREE.Vector3(swordDirection, 0, 0), 0, 10); //right
+                    if (ray1.intersectObjects(colliderEnemy).length > 0)
+                    {
+                        hitEnemy(ray1.intersectObjects(colliderEnemy)[0].object);
+                        swordHitEnemy = true;
+                    }
+                }
+            }
+            function preLoadWeapons()
+            {
+                var obj;
+                objLoader.load("Models/Player/bow.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    obj.position.y = -100;
+                    obj.position.x = -100;
+                    obj.scale.set(5, 5, 5);
+                    obj.castShadow = true;
+                    obj.receiveShadow = true;
+                    scene.add(obj);
+                    scene.remove(obj);
+                });
+                objLoader.load("Models/Player/sword.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    obj = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    obj.position.y = -100;
+                    obj.position.x = -100;
+                    obj.scale.set(5, 5, 5);
+                    obj.castShadow = true;
+                    obj.receiveShadow = true;
+                    scene.add(obj);
+                    scene.remove(obj);
+                });
+            }
+            function addAI(x, y)
+            {
+                var rnd = Math.floor((Math.random() * 10) + 1);
+                var creeper = "creeper";
+                var zombie = "zombie";
+                var enemyTyp;
+                if (rnd < 5)
+                {
+                    enemyTyp = creeper;
+                }
+                else
+                {
+                    enemyTyp = zombie;
+                }
+                objLoader.load("Models/Enemies/" + enemyTyp + ".json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    enemy.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                    enemy[enemy.length - 1].position.x = x;
+                    enemy[enemy.length - 1].position.y = y;
+                    enemy[enemy.length - 1].scale.set(5, 5, 5);
+                    enemy[enemy.length - 1].castShadow = true;
+                    enemy[enemy.length - 1].receiveShadow = true;
+                    enemy[enemy.length - 1].name = enemyTyp;
+                    enemyDirection.push(false);
+                    scene.add(enemy[enemy.length - 1]);
+
+                    //enemyhealth
+                    if (enemyTyp == "zombie")
+                    {
+                        enemyHealth.push(zombieHeatlh);
+                    }
+                    if (enemyTyp == "creeper")
+                    {
+                        enemyHealth.push(creeperHealth);
+                    }
+                    colliderEnemy.push(enemy[enemy.length - 1]);
+                    colliderWorld.push(enemy[enemy.length - 1]);
+                    enemyAnimation.push(new THREE.Animation(enemy[enemy.length - 1], enemy[enemy.length - 1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM));
+                });
+            }
+            function addCoinDrop(x, y)
+            {
+                objLoader.load("Models/Misc/coin.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    coin.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                    coin[coin.length - 1].position.x = x;
+                    coin[coin.length - 1].position.y = y;
+                    coin[coin.length - 1].castShadow = true;
+                    coin[coin.length - 1].name = "coin";
+                    scene.add(coin[coin.length - 1]);
+                    colliderObjects.push(coin[coin.length - 1]);
+                    coinAnimation = new THREE.Animation(coin[coin.length - 1], coin[coin.length - 1].geometry.animations[ 0 ], THREE.AnimationHandler.CATMULLROM);
+                    coinAnimation.play();
+                });
+            }
+            function addArrowDrop(x, y)
+            {
+                objLoader.load("Models/Misc/arrowdrop.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    arrowDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                    arrowDrop[arrowDrop.length - 1].position.x = x;
+                    arrowDrop[arrowDrop.length - 1].position.y = y;
+                    arrowDrop[arrowDrop.length - 1].castShadow = true;
+                    arrowDrop[arrowDrop.length - 1].name = "arrowDrop";
+                    scene.add(arrowDrop[arrowDrop.length - 1]);
+                    colliderObjects.push(arrowDrop[arrowDrop.length - 1]);
+                    arrowDropAnimation = new THREE.Animation(arrowDrop[arrowDrop.length - 1], arrowDrop[arrowDrop.length - 1].geometry.animations[3], THREE.AnimationHandler.CATMULLROM);
+                    arrowDropAnimation.play();
+                });
+            }
+            function addHeartDrop(x, y)
+            {
+                objLoader.load("Models/Misc/heart.json", function (geometry, materials) {
+                    for (var k in materials)
+                    {
+                        materials[k].skinning = true;
+                    }
+                    heartDrop.push(new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials)));
+                    heartDrop[heartDrop.length - 1].position.x = x;
+                    heartDrop[heartDrop.length - 1].position.y = y;
+                    heartDrop[heartDrop.length - 1].castShadow = true;
+                    heartDrop[heartDrop.length - 1].name = "heart";
+                    scene.add(heartDrop[heartDrop.length - 1]);
+                    colliderObjects.push(heartDrop[heartDrop.length - 1]);
+                    heartDropAnimation = new THREE.Animation(heartDrop[heartDrop.length - 1], heartDrop[heartDrop.length - 1].geometry.animations[1], THREE.AnimationHandler.CATMULLROM);
+                    heartDropAnimation.play();
+                });
+
+            }
+            function enemyAI()
+            {
+                for (var i = 0; i < enemy.length; i++)
+                {
+                    //left //leftdown
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 7, 0), new THREE.Vector3(-1, 0, 0), 5, enemySpotRange);
+                    ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 1, 0), new THREE.Vector3(-1, -0.5, 0), 1, enemySpotRange + 2);
+                    ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 7, 0), new THREE.Vector3(-1, 0, 0), 0, 2.5);
+                    if ((ray1.intersectObjects(colliderPlayer).length > 0 || ray4.intersectObjects(colliderPlayer).length > 0) && ray2.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        enemy[i].translateX(-enemyMovementSpeed);
+                        if (!enemyAnimation[i].isPlaying)
+                        {
+                            enemyAnimation[i].play(enemy[i].currentTime);
+                        }
+                    }
+
+                    //right //rightdown
+                    ray2 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 7, 0), new THREE.Vector3(1, 0, 0), 5, enemySpotRange);
+                    ray4 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 1, 0), new THREE.Vector3(1, -0.5, 0), 1, enemySpotRange + 2);
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 7, 0), new THREE.Vector3(1, 0, 0), 0, 2.5);
+                    if ((ray2.intersectObjects(colliderPlayer).length > 0 || ray4.intersectObjects(colliderPlayer).length > 0) && ray1.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        enemy[i].translateX(-enemyMovementSpeed);
+                        if (!enemyAnimation[i].isPlaying)
+                        {
+                            enemyAnimation[i].play(enemy[i].currentTime);
+                        }
+                    }
+
+                    //down
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(enemy[i].position.x, enemy[i].position.y + 1, 0), new THREE.Vector3(0, -1, 0), 0, 1.5);
+                    //FALL
+                    if (ray1.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        enemy[i].translateY(-enemyFallSpeed);
+                    }
+//                            //rotate 180
+                    if (player.position.x >= enemy[i].position.x && !enemyDirection[i])
+                    {
+                        enemyDirection[i] = true;
+                        enemy[i].rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                    }
+                    if (player.position.x <= enemy[i].position.x && enemyDirection[i])
+                    {
+                        enemyDirection[i] = false;
+                        enemy[i].rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                    }
+
+                }
+            }
+            function destroyEnemy(enemyScene)
+            {
+                if (colliderEnemy.indexOf(enemyScene) !== -1)
+                {
+                    colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                    colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                    enemyDirection.splice(enemy.indexOf(enemyScene));
+                    enemyHealth.splice(enemy.indexOf(enemyScene), 1);
+                    enemyAnimation.splice(enemy.indexOf(enemyScene), 1);
+                    var highscore = EnemyHighscoreValue;
+                    if (enemyScene.name === "creeper")
+                    {
+                        highscore = EnemyHighscoreValue + 30;
+                    }
+                    addHighscoreValue(highscore);
+                    spawnRndItem(enemyScene.position.x, enemyScene.position.y);
+                    scene.remove(enemyScene);
+                    enemy.splice(enemy.indexOf(enemyScene), 1);
+                    killedEnemies++;
+                }
+            }
+            function destroyEnemyOnHeadJump(enemyScene)
+            {
+                if (colliderEnemy.indexOf(enemyScene) !== -1)
+                {
+                    colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                    colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                    enemyDirection.splice(enemy.indexOf(enemyScene));
+                    enemyHealth.splice(enemy.indexOf(enemyScene), 1);
+                    enemyAnimation.splice(enemy.indexOf(enemyScene), 1);
+                    var highscore = EnemyHighscoreValue;
+                    if (enemyScene.name === "creeper")
+                    {
+                        highscore = EnemyHighscoreValue + 30;
+                    }
+                    addHighscoreValue(highscore);
+                    if (!soundEnemyHit.ended)
+                    {
+                        soundEnemyHit.pause();
+                        soundEnemyHit.currentTime = 0;
+                    }
+                    soundEnemyHit.play();
+                    spawnRndItem(enemyScene.position.x, enemyScene.position.y);
+                    scene.remove(enemyScene);
+                    enemy.splice(enemy.indexOf(enemyScene), 1);
+                    killedEnemies++;
+                }
+            }
+            function destroyEnemyFall(enemyScene)
+            {
+                if (colliderEnemy.indexOf(enemyScene) !== -1)
+                {
+                    colliderEnemy.splice(colliderEnemy.indexOf(enemyScene), 1);
+                    colliderWorld.splice(colliderWorld.indexOf(enemyScene), 1);
+                    enemyDirection.splice(enemy.indexOf(enemyScene));
+                    enemyHealth.splice(enemy.indexOf(enemyScene), 1);
+                    enemyAnimation.splice(enemy.indexOf(enemyScene), 1);
+                    spawnRndItem(enemyScene.position.x, enemyScene.position.y);
+                    scene.remove(enemyScene);
+                    enemy.splice(enemy.indexOf(enemyScene), 1);
+                }
+            }
+            function hitEnemy(enemyScene)
+            {
+                var indexEnemy = enemy.indexOf(enemyScene)
+                if (!soundEnemyHit.ended)
+                {
+                    soundEnemyHit.pause();
+                    soundEnemyHit.currentTime = 0;
+                }
+                soundEnemyHit.play();
+                if (enemyHealth[indexEnemy] <= 0)
+                {
+                    destroyEnemy(enemyScene);
+                }
+                else
+                {
+                    enemyHealth[indexEnemy]--;
+                }
+            }
+            function destroyArrow(arrowScene)
+            {
+                scene.remove(arrowScene);
+                arrow.splice(arrow.indexOf(arrowScene), 1);
+                arrowDirection.splice(arrow.indexOf(arrowScene), 1);
+                arrowDirectionX.splice(arrow.indexOf(arrowScene), 1);
+            }
+            function destroyCoin(coinScene)
+            {
+                if (colliderObjects.indexOf(coinScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
+                    coin.splice(coin.indexOf(coinScene), 1);
+                    addHighscoreValue(coinHighscoreValue);
+                    if (!soundCoin.ended)
+                    {
+                        soundCoin.pause();
+                        soundCoin.currentTime = 0;
+                    }
+                    soundCoin.play();
+                    scene.remove(coinScene);
+                    coinCollected++;
+                }
+            }
+            function destroyCoinFall(coinScene)
+            {
+                if (colliderObjects.indexOf(coinScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(coinScene), 1);
+                    coin.splice(coin.indexOf(coinScene), 1);
+                    scene.remove(coinScene);
+                }
+            }
+            function destroyArrowDrop(arrowScene)
+            {
+                if (colliderObjects.indexOf(arrowScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
+                    arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
+                    if (!soundItemPickup.ended)
+                    {
+                        soundItemPickup.pause();
+                        soundItemPickup.currentTime = 0;
+                    }
+                    soundItemPickup.play();
+                    scene.remove(arrowScene);
+                    addArrowHTML();
+                }
+            }
+            function destroyArrowDropFall(arrowScene)
+            {
+                if (colliderObjects.indexOf(arrowScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(arrowScene), 1);
+                    arrowDrop.splice(arrowDrop.indexOf(arrowScene), 1);
+                    scene.remove(arrowScene);
+                }
+            }
+            function destroyHeartDrop(heartScene)
+            {
+                if (colliderObjects.indexOf(heartScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
+                    heartDrop.splice(heartDrop.indexOf(heartScene), 1);
+                    if (!soundHeartPickup.ended)
+                    {
+                        soundHeartPickup.pause();
+                        soundHeartPickup.currentTime = 0;
+                    }
+                    soundHeartPickup.play();
+                    scene.remove(heartScene);
+                    addHeartHTML();
+                }
+            }
+            function destroyHeartDropFall(heartScene)
+            {
+                if (colliderObjects.indexOf(heartScene) !== -1)
+                {
+                    colliderObjects.splice(colliderObjects.indexOf(heartScene), 1);
+                    heartDrop.splice(heartDrop.indexOf(heartScene), 1);
+                    scene.remove(heartScene);
+                }
+            }
+            function destroyRndWorld(worldScene)
+            {
+                (colliderWorld.indexOf(worldScene) !== -1)
+                {
+                    colliderWorld.splice(colliderWorld.indexOf(worldScene), 1);
+                    scene.remove(worldScene);
+                    world.splice(world.indexOf(worldScene), 1);
+                }
+            }
+            function spawnRndItem(x, y)
+            {
+                var rnd = Math.floor((Math.random() * 100) + 1);
+                if (rnd <= 20) //Heartdrop 20%
+                {
+                    addHeartDrop(x, y);
+                }
+                else if (rnd > 20 && rnd <= 45) //Arrowdrop 25%
+                {
+                    addArrowDrop(x, y);
+                }
+                else if (rnd > 45 && rnd <= 75) //Coindrop 30%
+                {
+                    addCoinDrop(x, y);
+                }
+                else if (rnd > 75 && rnd <= 90) //Coindrop 15%
+                {
+                    addCoinDrop(x - 3, y);
+                    addCoinDrop(x + 3, y);
+                }
+                else if (rnd > 90) //Coindrop 10%
+                {
+                    addCoinDrop(x - 5, y);
+                    addCoinDrop(x, y);
+                    addCoinDrop(x + 5, y);
+                }
+            }
+
+            function createMenu()
+            {
+                //World
+                var mat2 = new THREE.MeshBasicMaterial({color: 0xff0f00});
+                var geo2 = new THREE.BoxGeometry(100, 10, 100);
+                cube2 = new THREE.Mesh(geo2, mat2);
+                cube2.position.y = -5;
+                scene.add(cube2);
+                animate();
+            }
+            function healthStatus()
+            {
+                //Sound
+                soundHit.play();
+                //invincibletimer
+                playerIsInvincible = true;
+                removeHeartHTML();
+                playerInvincibleTimer = new THREE.Clock();
+            }
+            function camerafollower()
+            {
+                //Camera 
+                camera.position.x = player.position.x + 10;
+                camera.position.y = player.position.y + 30;
+                //skybox
+                skyBox.position.x = player.position.x;
+                //Saw
+                saw.translateX(sawSpeed);
+                //sun
+                sunLight.target = player;
+                sunLight.position.x = player.position.x + 150;
+            }
+            function playerCollision()
+            {
+                if (playerLoaded)
+                {
+                    ray = [
+                        new THREE.Vector3(player.position.x, player.position.y + 1, 0), //right left bottom0
+                        new THREE.Vector3(player.position.x, player.position.y + 6.50, 0), //right left mid1
+                        new THREE.Vector3(player.position.x, player.position.y + 11.50, 0), //right left Upper2
+                        new THREE.Vector3(player.position.x - 2, player.position.y + 2, 0), //up down 1.83
+                        new THREE.Vector3(player.position.x, player.position.y + 2, 0), //up down 1.83
+                        new THREE.Vector3(player.position.x + 2, player.position.y + 2, 0)//up down4
+                    ];
+                    //Right
+                    for (var i = 0; i < 3; i++)
+                    {
+                        ray1 = new THREE.Raycaster(ray[i], new THREE.Vector3(1, 0, 0), 0, 1.75);
+                        ray2 = new THREE.Raycaster(ray[i], new THREE.Vector3(1, 0, 0), 0, 5);
+                        var item = ray1.intersectObjects(colliderObjects);
+
+                        //world
+                        if (ray1.intersectObjects(colliderWorld).length > 0)
+                        {
+                            player.position.x = oldx;
+                        }
+                        //item
+                        if (item.length > 0)
+                        {
+                            if (item[0].object.name == "coin")
+                            {
+                                destroyCoin(item[0].object);
+                            }
+                            if (item[0].object.name == "arrowDrop")
+                            {
+                                destroyArrowDrop(item[0].object);
+                            }
+                            if (item[0].object.name == "heart")
+                            {
+                                destroyHeartDrop(item[0].object);
+                            }
+                        }
+                        //enemy
+                        if (ray2.intersectObjects(colliderEnemy).length > 0)
+                        {
+                            if (!playerIsInvincible)
+                            {
+                                healthStatus();
+                            }
+                            else
+                            {
+                                if (playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
+                                {
+                                    playerIsInvincible = false;
+                                }
+                            }
+                        }
+                    }
+
+                    //Left
+                    for (var i = 0; i < 3; i++)
+                    {
+                        ray1 = new THREE.Raycaster(ray[i], new THREE.Vector3(-1, 0, 0), 0, 1.75);
+                        ray2 = new THREE.Raycaster(ray[i], new THREE.Vector3(-1, 0, 0), 0, 5);
+                        var item = ray1.intersectObjects(colliderObjects);
+                        //world
+                        if (ray1.intersectObjects(colliderWorld).length > 0)
+                        {
+                            player.position.x = oldx;
+                        }
+                        //item
+                        if (item.length > 0)
+                        {
+                            if (item[0].object.name == "coin")
+                            {
+                                destroyCoin(item[0].object);
+                            }
+                            if (item[0].object.name == "arrowDrop")
+                            {
+                                destroyArrowDrop(item[0].object);
+                            }
+                            if (item[0].object.name == "heart")
+                            {
+                                destroyHeartDrop(item[0].object);
+                            }
+                        }
+                        //world
+                        if (ray2.intersectObjects(colliderEnemy).length > 0)
+                        {
+                            if (!playerIsInvincible)
+                            {
+                                healthStatus();
+                            }
+                            else
+                            {
+                                if (playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
+                                {
+                                    playerIsInvincible = false;
+                                }
+                            }
+                        }
+                        //saw
+                        if (ray2.intersectObjects(colliderSaw).length > 0)
+                        {
+                            deathScreen();
+                        }
+                    }
+
+                    //UP   
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y + 13.5, 0), new THREE.Vector3(0, 1, 0), 0, 2);
+                    var item = ray1.intersectObjects(colliderObjects);
+                    //world
+                    if (ray1.intersectObjects(colliderWorld).length > 0)
+                    {
+                        jumpReady = false;
+                    }
+                    //Item
+                    if (item.length > 0)
+                    {
+                        if (item[0].object.name == "coin")
+                        {
+                            destroyCoin(item[0].object);
+                        }
+                        if (item[0].object.name == "arrowDrop")
+                        {
+                            destroyArrowDrop(item[0].object);
+                        }
+                        if (item[0].object.name == "heart")
+                        {
+                            destroyHeartDrop(item[0].object);
+                        }
+                    }
+                    //Enemy
+                    if (ray1.intersectObjects(colliderEnemy).length > 0)
+                    {
+                        if (!playerIsInvincible)
+                        {
+                            healthStatus();
+                        }
+                        else
+                        {
+                            if (playerInvincibleTimer.getElapsedTime() >= playerInvincibleDuration)
+                            {
+                                playerIsInvincible = false;
+                            }
+                        }
+                    }
+                    //Down
+                    for (var i = 3; i < 6; i++)
+                    {
+                        ray1 = new THREE.Raycaster(ray[i], new THREE.Vector3(0, -1, 0), 0, 2.3);
+                        var item = ray1.intersectObjects(colliderObjects);
+                        //world
+                        if (ray1.intersectObjects(colliderWorld).length > 0)
+                        {
+                            rayGround[i - 3] = true;
+                        }
+                        else
+                        {
+                            rayGround[i - 3] = false;
+                        }
+                        //item
+                        if (item.length > 0)
+                        {
+                            if (item[0].object.name == "coin")
+                            {
+                                destroyCoin(item[0].object);
+                            }
+                            if (item[0].object.name == "arrowDrop")
+                            {
+                                destroyArrowDrop(item[0].object);
+                            }
+                            if (item[0].object.name == "heart")
+                            {
+                                destroyHeartDrop(item[0].object);
+                            }
+                        }
+                    }
+                    if (rayGround[0] || rayGround[1] || rayGround[2])
+                    {
+                        isGround = true;
+                    }
+                    else
+                    {
+                        isGround = false;
+                        player.translateY(-playerFallSpeed);
+                    }
+                    //Kill enemy raycast
+                    ray1 = new THREE.Raycaster(new THREE.Vector3(player.position.x, player.position.y + 12, 0), new THREE.Vector3(0, -1, 0), 12.0, 12.9);
+                    if (ray1.intersectObjects(colliderEnemy).length > 0)
+                    {
+                        destroyEnemyOnHeadJump(ray1.intersectObjects(colliderEnemy)[0].object);
+                    }
+                }
+            }
+
+            function playerControls()
+            {
+                if (isGround)
+                {
+                    //JumpPause
+                    if (groundTimer)
+                    {
+                        jumpPause = clock.getElapsedTime();
+                        groundTimer = false;
+                    }
+                    if (clock.getElapsedTime() > jumpPause + 0.08 && !groundTimer)
+                    {
+                        jumpReady = true;
+                        jumpTime = clock.getElapsedTime()
+                    }
+                }
+                else
+                {
+                    groundTimer = true;
+                }
+                if (controls.left == true)
+                {
+                    oldx = player.position.x;
 //                                playerLookDirection="-";
-                                if(playerLookDirection)
-                                {
-                                     player.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                                     playerLookDirection=false;
-                                }
-                                player.translateX( playerMoveSpeed );
-                             }
-                             if(controls.right==true)
-                             {
-                                oldx=player.position.x;
-                                if(!playerLookDirection)
-                                {
-                                     player.rotateOnAxis(new THREE.Vector3(0,1,0),Math.PI);
-                                     playerLookDirection=true;
-                                }
-                                player.translateX( playerMoveSpeed );
-                             }
-                             if(controls.up==true)
-                             {
-                                 if(clock.getElapsedTime()<(jumpTime+0.5) && jumpReady)
-                                 {
-                                     player.translateY( jumpSpeed );
-                                     jumpPause = clock.getElapsedTime()*clock.getDelta()*100;
-                                 }
-                             }
-                             else
-                             {
-                                 jumpReady=false;
-                             }
-                    }
-                    function weaponControls()
+                    if (playerLookDirection)
                     {
-                        if(animationSwordPlaying)
-                        {
-                            sword.position.x=player.position.x+weaponDirectionX;
-                            sword.position.y=player.position.y;
-                            if(!animationSword.isPlaying)
-                            {
-                                scene.remove(sword);
-                                animationSwordPlaying=false;
-                                swordHitEnemy=false;
-                            }
-                        }
-                        if(animationBowPlaying)
-                        {
-                            bow.position.x=player.position.x+weaponDirectionX;
-                            bow.position.y=player.position.y;
-                            if(!animationBow.isPlaying)
-                            {
-                                scene.remove(bow);
-                                animationBowPlaying=false;
-                            }
-                        }
+                        player.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                        playerLookDirection = false;
                     }
-                    function playerMoveAnimation()
+                    player.translateX(playerMoveSpeed);
+                }
+                if (controls.right == true)
+                {
+                    oldx = player.position.x;
+                    if (!playerLookDirection)
                     {
-                        if((controls.left || controls.right || controls.up) && !escMenu)
-                        {
-                            if(!playerAnimation.isPlaying)
-                            {
-                                playerAnimation.play(playerAnimation.currentTime);
-                            }
-                        }
-                        else
-                        {
-                            playerAnimation.stop();
-                        }
-                        
-                        //enemy Animation stopper
-                        if(escMenu)
-                        {
-                            for(var i=0;i<enemyAnimation.length;i++)
-                            {
-                                enemyAnimation[i].stop();
-                            }
-                        }
+                        player.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI);
+                        playerLookDirection = true;
                     }
-                     function createRndWorld()
+                    player.translateX(playerMoveSpeed);
+                }
+                if (controls.up == true)
+                {
+                    if (clock.getElapsedTime() < (jumpTime + 0.5) && jumpReady)
                     {
-                        //sunlight
-                        sunLight = new THREE.DirectionalLight( 0xffffff, 1);
-                        sunLight.position.set(100,200,+100);
+                        player.translateY(jumpSpeed);
+                        jumpPause = clock.getElapsedTime() * clock.getDelta() * 100;
+                    }
+                }
+                else
+                {
+                    jumpReady = false;
+                }
+            }
+            function weaponControls()
+            {
+                if (animationSwordPlaying)
+                {
+                    sword.position.x = player.position.x + weaponDirectionX;
+                    sword.position.y = player.position.y;
+                    if (!animationSword.isPlaying)
+                    {
+                        scene.remove(sword);
+                        animationSwordPlaying = false;
+                        swordHitEnemy = false;
+                    }
+                }
+                if (animationBowPlaying)
+                {
+                    bow.position.x = player.position.x + weaponDirectionX;
+                    bow.position.y = player.position.y;
+                    if (!animationBow.isPlaying)
+                    {
+                        scene.remove(bow);
+                        animationBowPlaying = false;
+                    }
+                }
+            }
+            function playerEnemyMoveAnimation()
+            {
+                if ((controls.left || controls.right || controls.up) && !escMenu)
+                {
+                    if (!playerAnimation.isPlaying)
+                    {
+                        playerAnimation.play(playerAnimation.currentTime);
+                    }
+                }
+                else
+                {
+                    playerAnimation.stop();
+                }
+
+                //enemy Animation stopper
+                if (escMenu)
+                {
+                    for (var i = 0; i < enemyAnimation.length; i++)
+                    {
+                        enemyAnimation[i].stop();
+                    }
+                    if(animationSaw.isPlaying)
+                    {
+                        animationSaw.stop();
+                    }
+                }
+                else
+                {
+                    if(!animationSaw.isPlaying)
+                    {
+                        animationSaw.play(animationSaw.currentTime);
+                    }
+                }
+            }
+            function createRndWorld()
+            {
+                //sunlight
+                sunLight = new THREE.DirectionalLight(0xffffff, 1);
+                sunLight.position.set(100, 200, +100);
 //                        sunLight.shadowCameraVisible = true;
-                        sunLight.shadowDarkness = 1.95;
-                        sunLight.intensity = 0.1;
-                        sunLight.castShadow = true;
-                        sunLight.shadowMapHeight = 4096;
-                        sunLight.shadowMapWidth = 4096;
-                        scene.add(sunLight);
-                        createPlayer(0,15);
-                        
-                        var hemiLight = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-                        scene.add( hemiLight );
-                        
-                        //StartBiome
-                        createRndMapNext();
-                        //skybox
-                        var skyPath = "Models/World/Skybox/sky";
-                        var skyDir  = ["left", "right", "up", "down", "back", "front"];
-                        var skyGeometry = new THREE.BoxGeometry( 750, 750, 750 );	
-                        var skyMat = [];
-                        for (var i = 0; i < 6; i++)
-                        {
-                            var skyTexture = new THREE.ImageUtils.loadTexture( skyPath + skyDir[i] +".png");
-                            skyTexture.minFilter = THREE.NearestFilter;
-                            var meshBasic = new THREE.MeshBasicMaterial();
-                            meshBasic.side = THREE.BackSide;
-                            meshBasic.map = skyTexture;
-                            skyMat.push(meshBasic);
-                        }
-//                        skyMat.push();
-                        var skyMaterial = new THREE.MeshFaceMaterial( skyMat );
-                        skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
-                        scene.add( skyBox );
-                        
-                        //Saw
-                        var sawTexture = new THREE.ImageUtils.loadTexture( 'Models/Misc/saw.png' );
-                        sawTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/Misc/saw.json", function(geometry){
-                        var materialworld = new THREE.MeshLambertMaterial({ map: sawTexture});
-                        saw = new THREE.Mesh(geometry, materialworld);
-                        saw.castShadow=true;
-                        saw.receiveShadow=true;
-                        saw.position.y = 10;
-                        saw.position.x = -100;
-                        saw.scale.set(5,9,5);
-                        scene.add(saw);
-                        colliderSaw.push(saw);
-                        });
-                        //Time
-                        startLocalTime();
-                        animate();
-                    }
-                    function createRndMapNext()
+                sunLight.shadowDarkness = 1.95;
+                sunLight.intensity = 0.1;
+                sunLight.castShadow = true;
+                sunLight.shadowMapHeight = 4096;
+                sunLight.shadowMapWidth = 4096;
+                scene.add(sunLight);
+                createPlayer(0, 15);
+
+                var hemiLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+                scene.add(hemiLight);
+
+                //StartBiome
+                createRndMapNext();
+                //skybox
+                var skyPath = "Models/World/Skybox/sky";
+                var skyDir = ["left", "right", "up", "down", "back", "front"];
+                var skyGeometry = new THREE.BoxGeometry(750, 750, 750);
+                var skyMat = [];
+                for (var i = 0; i < 6; i++)
+                {
+                    var skyTexture = new THREE.ImageUtils.loadTexture(skyPath + skyDir[i] + ".png");
+                    skyTexture.minFilter = THREE.NearestFilter;
+                    var meshBasic = new THREE.MeshBasicMaterial();
+                    meshBasic.side = THREE.BackSide;
+                    meshBasic.map = skyTexture;
+                    skyMat.push(meshBasic);
+                }
+                var skyMaterial = new THREE.MeshFaceMaterial(skyMat);
+                skyBox = new THREE.Mesh(skyGeometry, skyMaterial);
+                scene.add(skyBox);
+
+                //Saw
+                
+                objLoader.load("Models/Misc/saw.json", function (geometry, materials) {
+                    for (var k in materials)
                     {
-                        var rnd = Math.floor((Math.random() * 10) + 1);
-                        if(rndBiomeSize<=0)
-                        {
-                            rndBiome = Math.floor((Math.random() * 3) + 1);
-                            switch(rndBiome)
-                            {
-                                case 1: rndBiomeType="dirt"; break;
-                                case 2: rndBiomeType="stone"; break;
-                                case 3: rndBiomeType="sand"; break;
-                            }
-                            rndBiomeSize = Math.floor((Math.random() * 10) + 1);
-                        }
-                        
-                        //Enemy spawn
-                        var rndEnemy = Math.floor((Math.random() * 100) + 1);
-                        if(rndEnemy >= 35 && worldOffsetX > 60) 
-                        {
-                            addAI(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        
-                        //Coin spawn
-                        var rndCoin = Math.floor((Math.random() * 100) + 1);
-                        if(rndCoin >= 67 && worldOffsetX > 60) 
-                        {
-                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        else if(rndCoin < 20 && worldOffsetX > 60) 
-                        {
-                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                            addCoinDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        
-                        //Arrow
-                        var rndArrow = Math.floor((Math.random() * 100) + 1);
-                        if(rndArrow >= 80 && worldOffsetX > 60) 
-                        {
-                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        else if(rndArrow < 13 && worldOffsetX > 60) 
-                        {
-                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                            addArrowDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        
-                        //heart
-                        var rndHeart = Math.floor((Math.random() * 100) + 1);
-                        if(rndHeart >= 90 && worldOffsetX > 60) 
-                        {
-                            addHeartDrop(Math.floor((Math.random() * 60) + 1)+worldOffsetX,15);
-                        }
-                        
-                        //worldspawn
-                        var worldTexture = new THREE.ImageUtils.loadTexture( 'Models/World/Rnd/world1.png' );
-                        worldTexture.minFilter = THREE.NearestFilter;
-                        objLoader.load( "Models/World/Rnd/"+rnd+""+rndBiomeType+".json", function(geometry){
-                        var materialworld = new THREE.MeshLambertMaterial({ map: worldTexture});
-                        world.push(new THREE.Mesh(geometry, materialworld));
-                        world[world.length-1].castShadow=true;
-                        world[world.length-1].receiveShadow=true;
-                        world[world.length-1].position.x = worldOffsetX;
-                        worldOffsetX=worldOffsetX+60;
-                        scene.add(world[world.length-1]);
-                        rndBiomeSize--;
-                        colliderWorld.push(world[world.length-1]);
-                        
-                        });
+                        materials[k].skinning = true;
                     }
-                    function rndWorldController()
+                    saw = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+                    saw.position.y = player.position.y;
+                    saw.position.x = player.position.x;
+                    saw.scale.set(5, 5, 5);
+                    saw.castShadow = true;
+                    saw.receiveShadow = true;
+                    saw.position.x = -70;
+                    saw.position.y = 10;
+                    scene.add(saw);
+                    animationSaw = new THREE.Animation(saw, saw.geometry.animations[ 2 ], THREE.AnimationHandler.CATMULLROM);
+                    animationSaw.play();
+                    saw.castShadow = true;
+//                    saw.scale.set(5, 9, 5);
+                    scene.add(saw);
+                    colliderSaw.push(saw);
+                });
+                //Time
+                startLocalTime();
+                animate();
+            }
+            function createRndMapNext()
+            {
+                var rnd = Math.floor((Math.random() * 10) + 1);
+                if (rndBiomeSize <= 0)
+                {
+                    rndBiome = Math.floor((Math.random() * 3) + 1);
+                    switch (rndBiome)
                     {
-                        //add
-                        if(player.position.x >= world[world.length-1].position.x -(60))
-                        {
-                            createRndMapNext();
-                        }
-                        //destroy
-                        if(world[0].position.x+(160) < player.position.x)
-                        {
-                            destroyRndWorld(world[0]);
-                        }
-                        
-                         //destroy enemies
-                         for(var i=0;i<enemy.length;i++)
-                         {
-                            //fall
-                            if(enemy[i].position.y<=-15)
-                            {
-                                destroyEnemyFall(enemy[i]);
-                            }
-                             //X
-                           else  if((enemy[i].position.x+130) <= player.position.x)
-                            {
-                                destroyEnemyFall(enemy[i]);
-                            }
-                         }
-                         //destroy hearts
-                         for(var i=0;i<heartDrop.length;i++)
-                         {
-                            //fall
-                            if(heartDrop[i].position.y<=-15)
-                            {
-                                destroyHeartDropFall(heartDrop[i]);
-                            }
-                             //X
-                           else  if((heartDrop[i].position.x+130) <= player.position.x)
-                            {
-                                destroyHeartDropFall(heartDrop[i]);
-                            }
-                         }
-                         //destroy coins
-                         for(var i=0;i<coin.length;i++)
-                         {
-                            //fall
-                            if(coin[i].position.y<=-15)
-                            {
-                                destroyCoinFall(coin[i]);
-                            }
-                             //X
-                            else if((coin[i].position.x+130) <= player.position.x)
-                            {
-                                destroyCoinFall(coin[i]);
-                            }
-                         }
-                         //destroy arrowdrop
-                         for(var i=0;i<arrowDrop.length;i++)
-                         {
-                           //fall
-                            if(arrowDrop[i].position.y<=-15)
-                            {
-                                destroyArrowDropFall(arrowDrop[i]);
-                            }
-                             //X
-                            else if((arrowDrop[i].position.x+130) <= player.position.x)
-                            {
-                                destroyArrowDropFall(arrowDrop[i]);
-                            }
-                         }
-                         //destroy arrows
-                         for(var i=0;i<arrow.length;i++)
-                         {
-                             //X
-                            if((arrow[i].position.x+100) <= player.position.x || arrow[i].position.x > (player.position.x+90))
-                            {
-                                destroyArrow(arrow[i]);
-                            }
-                         }
-                         
-                         //player death
-                         if(player.position.y <= -30)
-                         {
-                             deathScreen();
-                         }
-                    } 
-                    function objectCollision()
-                    {
-                        //coin
-                        for(var i=0;i<coin.length;i++)
-                        {
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y+7,0),new THREE.Vector3(0,-1,0),0,7); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                coin[i].translateY(-coinFallSpeed);
-                            }
-                        }
-                        //arrowDrop
-                        for(var i=0;i<arrowDrop.length;i++)
-                        {
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y+3,0),new THREE.Vector3(0,-1,0),0,3); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                arrowDrop[i].translateY(-arrowDropFallSpeed);
-                            }
-                        }
-                        //heartDrop
-                        for(var i=0;i<heartDrop.length;i++)
-                        {
-                            ray4 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y,0),new THREE.Vector3(0,-1,0),0,0.7); //down
-                            if(ray4.intersectObjects(colliderWorld).length<=0)
-                            {
-                                heartDrop[i].translateY(-heartDropFallSpeed);
-                            }
-                        }
+                        case 1:
+                            rndBiomeType = "dirt";
+                            break;
+                        case 2:
+                            rndBiomeType = "stone";
+                            break;
+                        case 3:
+                            rndBiomeType = "sand";
+                            break;
                     }
-                    function audioController()
+                    rndBiomeSize = Math.floor((Math.random() * 10) + 1);
+                }
+
+                //Enemy spawn
+                var rndEnemy = Math.floor((Math.random() * 100) + 1);
+                if (rndEnemy >= 35 && worldOffsetX > 60)
+                {
+                    addAI(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+
+                //Coin spawn
+                var rndCoin = Math.floor((Math.random() * 100) + 1);
+                if (rndCoin >= 67 && worldOffsetX > 60)
+                {
+                    addCoinDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+                else if (rndCoin < 20 && worldOffsetX > 60)
+                {
+                    addCoinDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                    addCoinDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+
+                //Arrow
+                var rndArrow = Math.floor((Math.random() * 100) + 1);
+                if (rndArrow >= 80 && worldOffsetX > 60)
+                {
+                    addArrowDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+                else if (rndArrow < 13 && worldOffsetX > 60)
+                {
+                    addArrowDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                    addArrowDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+
+                //heart
+                var rndHeart = Math.floor((Math.random() * 100) + 1);
+                if (rndHeart >= 90 && worldOffsetX > 60)
+                {
+                    addHeartDrop(Math.floor((Math.random() * 60) + 1) + worldOffsetX, 15);
+                }
+
+                //worldspawn
+                var worldTexture = new THREE.ImageUtils.loadTexture('Models/World/Rnd/world1.png');
+                worldTexture.minFilter = THREE.NearestFilter;
+                objLoader.load("Models/World/Rnd/" + rnd + "" + rndBiomeType + ".json", function (geometry) {
+                    var materialworld = new THREE.MeshLambertMaterial({map: worldTexture});
+                    world.push(new THREE.Mesh(geometry, materialworld));
+                    world[world.length - 1].castShadow = true;
+                    world[world.length - 1].receiveShadow = true;
+                    world[world.length - 1].position.x = worldOffsetX;
+                    worldOffsetX = worldOffsetX + 60;
+                    scene.add(world[world.length - 1]);
+                    rndBiomeSize--;
+                    colliderWorld.push(world[world.length - 1]);
+
+                });
+            }
+            function rndWorldController()
+            {
+                //add
+                if (player.position.x >= world[world.length - 1].position.x - (60))
+                {
+                    createRndMapNext();
+                }
+                //destroy
+                if (world[0].position.x + (160) < player.position.x)
+                {
+                    destroyRndWorld(world[0]);
+                }
+
+                //destroy enemies
+                for (var i = 0; i < enemy.length; i++)
+                {
+                    //fall
+                    if (enemy[i].position.y <= -15)
                     {
-                        if((controls.left || controls.right || controls.up) && isGround )
-                        {
-                            soundMove.play();
-                        }
-                        else
-                        {
-                            soundMove.pause();
-                            soundMove.currentTime=0;
-                        }
-                        if(animationSwordPlaying )
-                        {
-                            soundSword.play();
-                        }
-                        else
-                        {
-                            soundSword.pause();
-                            soundSword.currentTime=0;
-                        }
-                        if(animationBowPlaying )
-                        {
-                            soundBow.play();
-                        }
-                        else
-                        {
-                            soundBow.pause();
-                            soundBow.currentTime=0;
-                        }
+                        destroyEnemyFall(enemy[i]);
                     }
-                    function animate() 
+                    //X
+                    else if ((enemy[i].position.x + 130) <= player.position.x)
                     {
-                        requestAnimationFrame(animate);
-                        renderer.render( scene, camera );
-                        THREE.AnimationHandler.update( clock.getDelta()*3 );
-                            
-                            if(!escMenu)
-                            {
-                                if(playerLoaded)
-                                {
-                                    rndWorldController();
-                                    outOfAmmoHTML();
-                                    updateHighscoreHTML();
-                                    playerControls();
-                                    weaponControls();
-                                    enemyAI();
-                                    camerafollower();
-                                    sawSpeedUpdate();
-                                    playerCollision();
-                                    arrowCollision();
-                                    swordCollision();
-                                    objectCollision();
-                                }
-                            }
-                            //anistop ESCMenu
-                            if(playerLoaded)
-                            {
-                                playerMoveAnimation()
-                            }
-                            audioController();
+                        destroyEnemyFall(enemy[i]);
                     }
-		</script>
-	</body>
-       
+                }
+                //destroy hearts
+                for (var i = 0; i < heartDrop.length; i++)
+                {
+                    //fall
+                    if (heartDrop[i].position.y <= -15)
+                    {
+                        destroyHeartDropFall(heartDrop[i]);
+                    }
+                    //X
+                    else if ((heartDrop[i].position.x + 130) <= player.position.x)
+                    {
+                        destroyHeartDropFall(heartDrop[i]);
+                    }
+                }
+                //destroy coins
+                for (var i = 0; i < coin.length; i++)
+                {
+                    //fall
+                    if (coin[i].position.y <= -15)
+                    {
+                        destroyCoinFall(coin[i]);
+                    }
+                    //X
+                    else if ((coin[i].position.x + 130) <= player.position.x)
+                    {
+                        destroyCoinFall(coin[i]);
+                    }
+                }
+                //destroy arrowdrop
+                for (var i = 0; i < arrowDrop.length; i++)
+                {
+                    //fall
+                    if (arrowDrop[i].position.y <= -15)
+                    {
+                        destroyArrowDropFall(arrowDrop[i]);
+                    }
+                    //X
+                    else if ((arrowDrop[i].position.x + 130) <= player.position.x)
+                    {
+                        destroyArrowDropFall(arrowDrop[i]);
+                    }
+                }
+                //destroy arrows
+                for (var i = 0; i < arrow.length; i++)
+                {
+                    //X
+                    if ((arrow[i].position.x + 100) <= player.position.x || arrow[i].position.x > (player.position.x + 90))
+                    {
+                        destroyArrow(arrow[i]);
+                    }
+                }
+
+                //player death
+                if (player.position.y <= -30)
+                {
+                    deathScreen();
+                }
+            }
+            function objectCollision()
+            {
+                //coin
+                for (var i = 0; i < coin.length; i++)
+                {
+                    ray4 = new THREE.Raycaster(new THREE.Vector3(coin[i].position.x, coin[i].position.y + 7, 0), new THREE.Vector3(0, -1, 0), 0, 7); //down
+                    if (ray4.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        coin[i].translateY(-coinFallSpeed);
+                    }
+                }
+                //arrowDrop
+                for (var i = 0; i < arrowDrop.length; i++)
+                {
+                    ray4 = new THREE.Raycaster(new THREE.Vector3(arrowDrop[i].position.x, arrowDrop[i].position.y + 3, 0), new THREE.Vector3(0, -1, 0), 0, 3); //down
+                    if (ray4.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        arrowDrop[i].translateY(-arrowDropFallSpeed);
+                    }
+                }
+                //heartDrop
+                for (var i = 0; i < heartDrop.length; i++)
+                {
+                    ray4 = new THREE.Raycaster(new THREE.Vector3(heartDrop[i].position.x, heartDrop[i].position.y, 0), new THREE.Vector3(0, -1, 0), 0, 0.7); //down
+                    if (ray4.intersectObjects(colliderWorld).length <= 0)
+                    {
+                        heartDrop[i].translateY(-heartDropFallSpeed);
+                    }
+                }
+            }
+            function audioController()
+            {
+                if ((controls.left || controls.right || controls.up) && isGround)
+                {
+                    soundMove.play();
+                }
+                else
+                {
+                    soundMove.pause();
+                    soundMove.currentTime = 0;
+                }
+                if (animationSwordPlaying)
+                {
+                    soundSword.play();
+                }
+                else
+                {
+                    soundSword.pause();
+                    soundSword.currentTime = 0;
+                }
+                if (animationBowPlaying)
+                {
+                    soundBow.play();
+                }
+                else
+                {
+                    soundBow.pause();
+                    soundBow.currentTime = 0;
+                }
+                if (soundBg.ended)
+                {
+                    console.log("asd");
+                    soundBg.pause();
+                    soundBg.currentTime = 0;
+                    soundBg.play();
+                }
+            }
+            function animate()
+            {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+                THREE.AnimationHandler.update(clock.getDelta() * 3);
+
+                if (!escMenu)
+                {
+                    if (playerLoaded)
+                    {
+                        rndWorldController();
+                        outOfAmmoHTML();
+                        updateHighscoreHTML();
+                        playerControls();
+                        weaponControls();
+                        enemyAI();
+                        camerafollower();
+                        sawSpeedUpdate();
+                        playerCollision();
+                        arrowCollision();
+                        swordCollision();
+                        objectCollision();
+                        audioController();
+                    }
+                }
+                //anistop ESCMenu
+                if (playerLoaded)
+                {
+                    playerEnemyMoveAnimation();
+                }
+                
+            }
+        </script>
+    </body>
+
 </html>
