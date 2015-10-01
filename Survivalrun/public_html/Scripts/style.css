@@ -38,13 +38,21 @@
     #menuStartButton{
        position: fixed;
        text-align: center;
-       margin-left: -50px;
-       top: 50%;
+       margin-left: -60px;
+       top: 40%;
        left: 50%;
        font-size: 50px;
        font-family: MV Boli;
        color: white;
        cursor: pointer;
+    }
+    #mapping{
+       position: fixed;
+       text-align: center;
+       margin-left: -250px;
+       top: 50%;
+       left: 50%;
+       cursor: default;
     }
     #menuSoundVolume{
        position: fixed;
