@@ -68,7 +68,7 @@
         </div>
 
         <!-- GUI -->
-        <div id="gameSceme">
+        <div id="gameScene">
             <div id="highscoreview">
                 <a id="highscoretext">Highscore 0</a>
             </div>
@@ -85,10 +85,10 @@
             <div id="ammotxt">
                 <a id="noammotext"></a>
             </div>
-        </div>
         <script>
             //hide deathscreen
             $("#deathScreen").hide();
+            $("#gameScene").hide();
 
             //Menu variables
             var graphic = true;
@@ -410,8 +410,8 @@
                 $("#heart5").hide();
 
                 walkedBlocks = parseInt(player.position.x / 10);
-
                 $("#deathScreen").show();
+                $("#gameScene").hide();
                 document.getElementById("pausetext").innerHTML = "";
                 document.getElementById("statsHighscore").innerHTML = "Highscore:" + highscoreValue;
                 document.getElementById("statsTime").innerHTML = "Time:" + minute + ":" + second;
@@ -486,6 +486,7 @@
 //                     init();
             function menuStart()
             {
+                $("#gameScene").show();
                 init();
             }
             //resize
@@ -554,7 +555,7 @@
                 //world
                 worldOffsetX = -120;
                 rndBiomeSize = -1;
-                sawSpeed = 0.557;
+                sawSpeed = 0.53;
 
                 //Playersettings
                 playerMoveSpeed = 0.6;
@@ -611,7 +612,6 @@
                 camera.position.z = 60;
                 camera.position.y = 40;
                 camera.rotation.x = 12;
-
 
                 //Dom
                 document.body.appendChild(renderer.domElement);
@@ -1750,7 +1750,6 @@
                 }
                 if (soundBg.ended)
                 {
-                    console.log("asd");
                     soundBg.pause();
                     soundBg.currentTime = 0;
                     soundBg.play();
@@ -1789,6 +1788,7 @@
                 
             }
         </script>
+                </div>
     </body>
 
 </html>
