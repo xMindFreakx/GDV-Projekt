@@ -1,0 +1,178 @@
+    canvas{
+       width: 100%;
+       height: 100%;
+    }
+    a {
+        text-decoration: none;
+    }
+    body{
+       margin: 0px;
+       overflow: hidden;
+       -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: default;
+    }
+    #menuBackground{
+       position: fixed;
+       width: 100%;
+       height: 100%;
+       background-color: black;
+    }
+    #menuTitle{
+       position: fixed;
+       text-align: center;
+       margin-left: -200px;
+       top: 2%;
+       right: 50%;
+       left: 50%;
+       font-size: 75px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #menuBackgroundimg{
+       width: 100%;
+       height: 100%;
+    }
+    #menuStartButton{
+       position: fixed;
+       text-align: center;
+       margin-left: -60px;
+       top: 40%;
+       left: 50%;
+       font-size: 50px;
+       font-family: MV Boli;
+       color: white;
+       cursor: pointer;
+    }
+    #mapping{
+       position: fixed;
+       text-align: center;
+       margin-left: -250px;
+       top: 50%;
+       left: 50%;
+       cursor: default;
+    }
+    #menuSoundVolume{
+       position: fixed;
+       bottom: 5%;
+       left: 5%;
+       font-size: 30px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #menuGraphic{
+       position: fixed;
+       bottom: 5%;
+       right: 5%;
+       font-size: 30px;
+       font-family: MV Boli;
+       color: white;
+       cursor: pointer;
+    }
+    #highscoreview{
+       position: absolute;
+       text-align: center;
+       width: 100%;
+       height: 100%;
+       font-size: 30px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #hpammo{
+       position: absolute;
+       text-align: left;
+       width: 100%;
+       height: 100%;
+       font-size: 30px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #timeview{
+       position: absolute;
+       text-align: right;
+       width: 100%;
+       height: 100%;
+       font-size: 30px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #ammotxt{
+       position: fixed;
+       text-align: center;
+       bottom: 10%;
+       left: 50%;
+       margin-left: -130px;
+       font-size: 50px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #pause{
+       position: fixed;
+       text-align: center;
+       top: 50%;
+       left: 50%;
+       margin-top: -50px;
+       margin-left: -100px;
+       font-size: 50px;
+       font-family: MV Boli;
+       color: white;
+    }
+    
+    #deathScreen{
+        position: fixed;
+        width: 100%;
+       height: 100%;
+    }
+    #deathSCreenBackground{
+        width: 100%;
+       height: 100%;
+    }
+    #statsContainer{
+       position: fixed;
+       top: 30%;
+       left: 5%;
+       font-size: 50px;
+       font-family: MV Boli;
+       color: white;
+    }
+    #statsHighscore{
+        margin: 0px;
+        display:inline;
+        padding: 0px;
+    }
+    #statsKill{
+        margin: 0px;
+        display:inline;
+        padding: 0px;
+    }
+    #statsWalk{
+        margin: 0px;
+        display:inline;
+        padding: 0px;
+    }
+    #statsCoin{
+        margin: 0px;
+        display:inline;
+        padding: 0px;
+    }
+    #statsTime{
+        margin: 0px;
+        display:inline;
+        padding: 0px;
+    }
+    #deadTitle{
+   position: fixed;
+   text-align: center;
+   margin-left: -200px;
+   top: 2%;
+   left: 50%;
+   font-size: 60px;
+   font-family: MV Boli;
+   color: white;
+    }
+  
+    
+    
